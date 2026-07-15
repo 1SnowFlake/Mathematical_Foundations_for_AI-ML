@@ -37,8 +37,8 @@ export default function VectorsPage() {
   // Build vectors for the canvas based on active operation
   const buildVectors = useCallback(() => {
     const baseVectors = [
-      { id: "a", point: { x: vecA.x, y: vecA.y }, color: "#6366f1", label: "a" },
-      { id: "b", point: { x: vecB.x, y: vecB.y }, color: "#ec4899", label: "b" },
+      { id: "a", point: { x: vecA.x, y: vecA.y }, color: "#6366f1", label: "a", draggable: true },
+      { id: "b", point: { x: vecB.x, y: vecB.y }, color: "#ec4899", label: "b", draggable: true },
     ];
 
     switch (activeOp) {
