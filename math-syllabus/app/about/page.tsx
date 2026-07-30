@@ -90,7 +90,7 @@ function ArchitectureDiagram() {
         React Flow · Plotly.js · KaTeX · Leva · mathjs · next-themes
       </text>
       <rect x="140" y="350" width="500" height="30" rx="6" ry="6"
-            fill="none" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 3" />
+        fill="none" stroke="var(--border)" strokeWidth="1" strokeDasharray="4 3" />
     </svg>
   );
 }
@@ -217,15 +217,16 @@ export default function AboutPage() {
           href="/about/comparison"
           className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold
                      text-white no-underline"
-          style={{ background: "var(--accent)" }}
+          style={{ background: "var(--accent)", color: "#ffffff", textDecoration: "none" }}
         >
-          📋 See Competitive Analysis →
+          📋 See Competitive Analysis
         </Link>
+
         <Link
           href="/progress"
           className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold
                      border no-underline"
-          style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+          style={{ borderColor: "var(--border)", color: "var(--foreground)", textDecoration: "none" }}
         >
           📊 Progress Dashboard
         </Link>

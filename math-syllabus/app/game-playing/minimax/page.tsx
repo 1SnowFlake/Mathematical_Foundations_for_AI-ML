@@ -110,9 +110,37 @@ function bestScoreFor(player: Mark, evals: ChildEval[]): number {
     : Math.min(...evals.map((e) => e.score));
 }
 
-/* ------------------------------------------------------------------ */
-/*  Small presentational pieces                                       */
-/* ------------------------------------------------------------------ */
+/**
+ * Turns a single search-tree node into the numbered sequence of minimax steps
+ * that produced its value — used to narrate whatever node the user is
+ * currently looking at in the tree explorer.
+ */
+function explainNode(
+  player: Mark,
+  isOver: boolean,
+  isWinner: boolean,
+  isDraw: boolean,
+  childCount: number,
+  bestScore: number | null
+): string[] {
+  if (isOver) {
+    return [
+      "Base case reached: check the board and it's already terminal \u2014 either three in a row, or every cell is full.",
+      isWinner
+        ? "Read the utility directly instead of recursing further: a win for X scores 10 minus the depth it happened at, a win for O scores that depth minus 10 \u2014 so faster wins score further from zero."
+        : "Read the utility directly instead of recursing further: a full board with no winner scores exactly 0.",
+      "That number is returned immediately to whichever call one level up is waiting on it \u2014 no further branching needed.",
+    ];
+  }
+  return [
+    "Check the base case first: is this position a win, a loss, or a full board? No \u2014 so the search keeps going instead of returning early.",
+    `Generate the legal moves: ${childCount} empty cell${childCount === 1 ? "" : "s"} remain, so this node branches into ${childCount} child position${childCount === 1 ? "" : "s"}, shown below.`,
+    `Recurse: for every branch, place ${player}'s mark on that cell, flip whose turn it is, and call minimax again one ply deeper \u2014 each child's score isn't known until its own subtree has been fully walked.`,
+    `Combine the children's values: ${player} is the ${player === "X" ? "MAX" : "MIN"} player at this node, so its value is the ${player === "X" ? "highest" : "lowest"} score among the children below \u2014 that comes out to ${bestScore !== null ? scoreLabel(bestScore) : "?"}, which is exactly what gets handed up to this node's parent.`,
+    "Prune along the way: children are visited left to right, tracking alpha (the best MAX can already guarantee) and beta (the best MIN can already guarantee). The instant beta \u2264 alpha, any remaining children are skipped outright \u2014 the other player would never let the game reach them, so their exact scores don't matter.",
+  ];
+}
+
 
 function Glyph({ mark, className = "" }: { mark: Cell; className?: string }) {
   if (!mark) return null;
@@ -121,12 +149,12 @@ function Glyph({ mark, className = "" }: { mark: Cell; className?: string }) {
     <svg viewBox="0 0 24 24" className={className} fill="none">
       <defs>
         <linearGradient id="gradX" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ff5f9e" />
-          <stop offset="100%" stopColor="#ff9d5c" />
-        </linearGradient>
-        <linearGradient id="gradO" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#22e5c9" />
           <stop offset="100%" stopColor="#3b82f6" />
+        </linearGradient>
+        <linearGradient id="gradO" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#ff5f9e" />
+          <stop offset="100%" stopColor="#ff9d5c" />
         </linearGradient>
       </defs>
       {mark === "X" ? (
@@ -155,13 +183,13 @@ function MiniBoard({
 }) {
   return (
     <div
-      className="grid grid-cols-3 gap-[3px] rounded-lg bg-background-secondary p-[3px] ring-1 ring-border"
+      className="grid grid-cols-3 grid-rows-3 gap-[3px] rounded-lg bg-background-secondary p-[3px] ring-1 ring-border"
       style={{ width: size, height: size }}
     >
       {board.map((cell, i) => (
         <div
           key={i}
-          className={`flex items-center justify-center rounded-[4px] transition-colors ${i === highlight
+          className={`flex h-full w-full items-center justify-center rounded-[4px] transition-colors ${i === highlight
             ? "bg-gradient-to-br from-[#ffd166]/20 to-transparent ring-1 ring-[#ffd166]/50"
             : "bg-surface"
             }`}
@@ -174,14 +202,14 @@ function MiniBoard({
 }
 
 function scoreTextClass(score: number): string {
-  if (score > 0) return "text-[#ff5f9e]";
-  if (score < 0) return "text-[#22e5c9]";
+  if (score > 0) return "text-[#22e5c9]";
+  if (score < 0) return "text-[#ff5f9e]";
   return "text-foreground-muted";
 }
 
 function scorePillClass(score: number): string {
-  if (score > 0) return "bg-[#ff5f9e]/15 ring-[#ff5f9e]/30";
-  if (score < 0) return "bg-[#22e5c9]/15 ring-[#22e5c9]/30";
+  if (score > 0) return "bg-[#22e5c9]/15 ring-[#22e5c9]/30";
+  if (score < 0) return "bg-[#ff5f9e]/15 ring-[#ff5f9e]/30";
   return "bg-surface ring-border";
 }
 
@@ -276,8 +304,8 @@ function Piece({
   return (
     <span
       className={`relative block rounded-full shadow-sm ${player === 1
-        ? "bg-gradient-to-br from-[#ff5f9e] to-[#ff9d5c]"
-        : "bg-gradient-to-br from-[#22e5c9] to-[#3b82f6]"
+        ? "bg-gradient-to-br from-[#22e5c9] to-[#3b82f6]"
+        : "bg-gradient-to-br from-[#ff5f9e] to-[#ff9d5c]"
         } ${className}`}
     >
       {king && (
@@ -289,8 +317,8 @@ function Piece({
   );
 }
 
-const P1_DOT = "h-2 w-2 rounded-full bg-gradient-to-br from-[#ff5f9e] to-[#ff9d5c]";
-const P2_DOT = "h-2 w-2 rounded-full bg-gradient-to-br from-[#22e5c9] to-[#3b82f6]";
+const P1_DOT = "h-2 w-2 rounded-full bg-gradient-to-br from-[#22e5c9] to-[#3b82f6]";
+const P2_DOT = "h-2 w-2 rounded-full bg-gradient-to-br from-[#ff5f9e] to-[#ff9d5c]";
 
 /** Shared chrome for every mini-game: header, rules card, board card. */
 function GameShell({
@@ -383,6 +411,244 @@ const TTT_EMPTY: Board = Array(9).fill(null);
 const TTT_HUMAN: Mark = "X";
 const TTT_AGENT: Mark = "O";
 
+/* ------------------------------------------------------------------ */
+/*  Multi-level search-tree diagram (builds several plies at once,     */
+/*  lays them out as a real node-link tree, and renders it with SVG   */
+/*  connectors). Depth adapts to branching factor so the diagram stays */
+/*  readable early in the game and goes deeper once it's small.       */
+/* ------------------------------------------------------------------ */
+
+interface TreeVizNode {
+  board: Board;
+  move: number | null; // the cell just played to reach this node (null for the diagram root)
+  path: number[]; // moves from the diagram root down to this node
+  playerToMove: Mark; // whose turn it is at this node (meaningless once terminal)
+  depth: number; // ply distance from the diagram root
+  value: number; // minimax value of this node, i.e. V(board)
+  terminal: boolean;
+  winner: Mark | null;
+  draw: boolean;
+  isOptimal: boolean; // true if this is (one of) the best replies for its parent
+  children: TreeVizNode[];
+}
+
+const TREE_VIZ_MAX_PLIES = 3; // never render more than this many levels below the root
+const TREE_VIZ_NODE_BUDGET = 46; // stop expanding once the diagram would exceed this many nodes
+
+function makeTreeVizNode(
+  board: Board,
+  playerToMove: Mark,
+  depth: number,
+  move: number | null,
+  path: number[],
+): TreeVizNode {
+  const winner = checkWinner(board);
+  const draw = !winner && isFull(board);
+  return {
+    board,
+    move,
+    path,
+    playerToMove,
+    depth,
+    value: minimax(
+      board.slice(),
+      depth,
+      playerToMove === "X",
+      -Infinity,
+      Infinity,
+    ),
+    terminal: Boolean(winner) || draw,
+    winner,
+    draw,
+    isOptimal: false,
+    children: [],
+  };
+}
+
+/** Expands one more ply, but only for nodes at the current frontier — this keeps every
+ * branch at the same depth so the diagram never looks lopsided. */
+function expandTreeVizLevel(frontier: TreeVizNode[]): TreeVizNode[] {
+  const next: TreeVizNode[] = [];
+  for (const node of frontier) {
+    if (node.terminal) continue;
+    for (const m of availableMoves(node.board)) {
+      const nextBoard = node.board.slice();
+      nextBoard[m] = node.playerToMove;
+      const child = makeTreeVizNode(
+        nextBoard,
+        node.playerToMove === "X" ? "O" : "X",
+        node.depth + 1,
+        m,
+        [...node.path, m],
+      );
+      node.children.push(child);
+      next.push(child);
+    }
+  }
+  return next;
+}
+
+/** Tags each node's children with whether they're (one of) the best reply for that
+ * node's player — the same max/min rule minimax itself uses to back up a value. */
+function annotateOptimalReplies(node: TreeVizNode) {
+  if (node.children.length === 0) return;
+  const best =
+    node.playerToMove === "X"
+      ? Math.max(...node.children.map((c) => c.value))
+      : Math.min(...node.children.map((c) => c.value));
+  for (const child of node.children) {
+    child.isOptimal = child.value === best;
+    annotateOptimalReplies(child);
+  }
+}
+
+function buildTreeViz(rootBoard: Board, rootPlayer: Mark): TreeVizNode {
+  const root = makeTreeVizNode(rootBoard, rootPlayer, 0, null, []);
+  let frontier = [root];
+  let total = 1;
+  for (let ply = 0; ply < TREE_VIZ_MAX_PLIES; ply++) {
+    const nextSize = frontier.reduce(
+      (sum, n) => sum + (n.terminal ? 0 : availableMoves(n.board).length),
+      0,
+    );
+    if (nextSize === 0 || total + nextSize > TREE_VIZ_NODE_BUDGET) break;
+    frontier = expandTreeVizLevel(frontier);
+    total += frontier.length;
+  }
+  annotateOptimalReplies(root);
+  return root;
+}
+
+interface LaidOutNode extends TreeVizNode {
+  x: number; // leaf-slot units, not pixels
+  children: LaidOutNode[];
+}
+
+/** Simple tidy-tree layout: leaves get sequential slots, and every internal node sits
+ * above the average x of its children. */
+function layoutTreeViz(root: TreeVizNode): {
+  root: LaidOutNode;
+  leafCount: number;
+  maxDepth: number;
+} {
+  let nextLeafSlot = 0;
+  let maxDepth = 0;
+  function place(node: TreeVizNode): LaidOutNode {
+    maxDepth = Math.max(maxDepth, node.depth);
+    if (node.children.length === 0) {
+      const x = nextLeafSlot;
+      nextLeafSlot += 1;
+      return { ...node, x, children: [] };
+    }
+    const children = node.children.map(place);
+    const x = children.reduce((sum, c) => sum + c.x, 0) / children.length;
+    return { ...node, x, children };
+  }
+  const placed = place(root);
+  return { root: placed, leafCount: Math.max(nextLeafSlot, 1), maxDepth };
+}
+
+const TREE_VIZ_COL_W = 84;
+const TREE_VIZ_ROW_H = 112;
+const TREE_VIZ_NODE_SIZE = 46;
+
+/** Renders a multi-level minimax search tree: mini boards connected by lines, colored by
+ * score, with the optimal reply at every node picked out in gold. Click any node to
+ * re-center the explorer there. */
+function TreeDiagram({
+  root,
+  onSelect,
+}: {
+  root: TreeVizNode;
+  onSelect: (path: number[]) => void;
+}) {
+  const {
+    root: laidOut,
+    leafCount,
+    maxDepth,
+  } = useMemo(() => layoutTreeViz(root), [root]);
+
+  const nodes: LaidOutNode[] = [];
+  const edges: { from: LaidOutNode; to: LaidOutNode }[] = [];
+  (function collect(n: LaidOutNode) {
+    nodes.push(n);
+    for (const c of n.children) {
+      edges.push({ from: n, to: c });
+      collect(c);
+    }
+  })(laidOut);
+
+  const width = leafCount * TREE_VIZ_COL_W;
+  const height = (maxDepth + 1) * TREE_VIZ_ROW_H;
+  const px = (x: number) => x * TREE_VIZ_COL_W + TREE_VIZ_COL_W / 2;
+  const py = (depth: number) =>
+    depth * TREE_VIZ_ROW_H + TREE_VIZ_ROW_H / 2 - TREE_VIZ_NODE_SIZE / 2;
+
+  return (
+    <div className="overflow-x-auto rounded-xl bg-background-secondary/40 p-4 ring-1 ring-border">
+      <div className="relative" style={{ width, height, minWidth: "100%" }}>
+        <svg
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          style={{ width, height }}
+        >
+          {edges.map((e, idx) => (
+            <line
+              key={idx}
+              x1={px(e.from.x)}
+              y1={py(e.from.depth) + TREE_VIZ_NODE_SIZE}
+              x2={px(e.to.x)}
+              y2={py(e.to.depth)}
+              stroke={e.to.isOptimal ? "#ffd166" : "#8b8b96"}
+              strokeWidth={e.to.isOptimal ? 2 : 1.5}
+              opacity={e.to.isOptimal ? 0.9 : 0.5}
+            />
+          ))}
+        </svg>
+
+        {nodes.map((n, idx) => {
+          const isRoot = n.path.length === 0;
+          return (
+            <button
+              key={idx}
+              onClick={() => !isRoot && onSelect(n.path)}
+              disabled={isRoot}
+              className="absolute flex flex-col items-center gap-1 disabled:cursor-default"
+              style={{
+                left: px(n.x),
+                top: py(n.depth),
+                transform: "translateX(-50%)",
+                width: TREE_VIZ_NODE_SIZE + 8,
+              }}
+            >
+              <div
+                className={`rounded-lg p-[3px] transition ${isRoot
+                  ? "ring-2 ring-accent"
+                  : n.isOptimal
+                    ? "ring-1 ring-[#ffd166]/70 shadow-[0_0_14px_-4px_rgba(255,209,102,0.6)]"
+                    : "ring-1 ring-border hover:ring-accent/50"
+                  }`}
+              >
+                <MiniBoard
+                  board={n.board}
+                  highlight={n.move ?? undefined}
+                  size={TREE_VIZ_NODE_SIZE}
+                />
+              </div>
+              <span
+                className={`font-score rounded-full px-1.5 py-[1px] text-[10px] font-bold ring-1 ${scorePillClass(
+                  n.value,
+                )} ${scoreTextClass(n.value)}`}
+              >
+                {scoreLabel(n.value)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function TicTacToeGame() {
   const [board, setBoard] = useState<Board>(TTT_EMPTY);
   const [turn, setTurn] = useState<Mark>("X");
@@ -455,11 +721,12 @@ function TicTacToeGame() {
     () => (nodeOver ? [] : getChildEvaluations(nodeBoard, nodePlayer)),
     [nodeBoard, nodePlayer, nodeOver]
   );
-  const sortedChildren = useMemo(
-    () => children.slice().sort((a, b) => a.move - b.move),
-    [children]
-  );
   const bestChildScore = children.length ? bestScoreFor(nodePlayer, children) : null;
+
+  const treeViz = useMemo(
+    () => (nodeOver ? null : buildTreeViz(nodeBoard, nodePlayer)),
+    [nodeBoard, nodePlayer, nodeOver]
+  );
 
   let status: string;
   if (winner) status = winner === TTT_HUMAN ? "You win! \u2728" : "Agent wins.";
@@ -495,12 +762,151 @@ function TicTacToeGame() {
         </p>
         <MathBlock tex={String.raw`V(s) = \begin{cases} \text{Utility}(s) & \text{if } s \text{ is terminal} \\ \max_{a} V(\text{Result}(s,a)) & \text{if Player}(s) = \text{MAX} \\ \min_{a} V(\text{Result}(s,a)) & \text{if Player}(s) = \text{MIN} \end{cases}`} />
         <p className="text-xs text-foreground-subtle mt-3">
-          <span className="font-semibold text-[#ff5f9e]">MAX (X)</span> aims for{" "}
+          <span className="font-semibold text-[#22e5c9]">MAX (X)</span> aims for{" "}
           <span className="font-score font-bold">+10</span> while{" "}
-          <span className="font-semibold text-[#22e5c9]">MIN (O)</span> aims for{" "}
+          <span className="font-semibold text-[#ff5f9e]">MIN (O)</span> aims for{" "}
           <span className="font-score font-bold">&minus;10</span>. Depth is subtracted so the
           agent prefers the fastest win.
         </p>
+      </div>
+
+      <div className="rise-in widget-card mb-8">
+        <div className="widget-card__title">Why It Has to Work This Way</div>
+        <p className="text-sm text-foreground-muted mb-3">
+          <span className="font-semibold text-foreground">Utility is only known at the leaves.</span>{" "}
+          There's no way to score an empty board directly &mdash; "is this a good position for X?"
+          only has an answer once the game is actually over. So the utility function itself is
+          trivial:
+        </p>
+        <MathBlock tex={String.raw`\text{Utility}(s) = \begin{cases} 10 - \text{depth} & \text{X has won} \\ \text{depth} - 10 & \text{O has won} \\ 0 & \text{draw} \end{cases}`} />
+        <p className="text-sm text-foreground-muted mt-4 mb-3">
+          <span className="font-semibold text-foreground">Every other value is found by backward induction,</span>{" "}
+          not by inspecting the board directly. You can't ask "how good is this state," only
+          "how good are the states I can reach from it, once <em>those</em> are known." That forces
+          recursion all the way to a terminal state before a single number can be computed &mdash;
+          which is exactly what <span className="font-score text-xs">V(s)</span> above says: unwind
+          to a leaf, then carry values back up one ply at a time.
+        </p>
+        <p className="text-sm text-foreground-muted mb-3">
+          <span className="font-semibold text-foreground">Why subtract depth at all?</span> Without
+          it, every X-win scores the same flat <span className="font-score">+10</span>, so the
+          agent can't distinguish a win next move from a win five moves away &mdash; it might
+          stall or blunder into a slower win, or worse, a slower loss. Subtracting depth from a win
+          and adding it to a loss makes:
+        </p>
+        <MathBlock tex={String.raw`\text{faster wins} \;>\; \text{slower wins} \;>\; \text{draws} \;>\; \text{slower losses} \;>\; \text{faster losses}`} />
+        <p className="text-sm text-foreground-muted mt-4">
+          <span className="font-semibold text-foreground">Why max for X and min for O at all?</span>{" "}
+          Tic-tac-toe is zero-sum and adversarial &mdash; O's gain is exactly X's loss on the same
+          scale, and minimax assumes <em>both</em> sides play optimally. So at any node it isn't
+          enough to ask "what's the best outcome here for me" &mdash; you have to ask "what's the
+          best outcome for whoever moves here," because the opponent is a hostile decision-maker,
+          not a random one. Averaging or ignoring their choice would let the agent get exploited by
+          any opponent that plays for real.
+        </p>
+      </div>
+
+      <div className="rise-in widget-card mb-8">
+        <div className="widget-card__title">Minimax, Step by Step</div>
+        <p className="text-sm text-foreground-muted mb-4">
+          Every single call to{" "}
+          <code className="font-score text-xs">minimax(board, depth, isMaximizing, alpha, beta)</code>{" "}
+          does the same five things, whether it's the very first move of the game or the last:
+        </p>
+        <ol className="space-y-3.5 text-sm text-foreground-subtle">
+          <li className="flex gap-3">
+            <span className="font-score flex-none rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">1</span>
+            <span>
+              <span className="font-semibold text-foreground">Base case.</span> Check whether the
+              board is already terminal &mdash; three in a row, or completely full. If it is, stop
+              recursing and return its utility straight away.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="font-score flex-none rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">2</span>
+            <span>
+              <span className="font-semibold text-foreground">Generate moves.</span> Otherwise,
+              list every empty cell &mdash; each one is a legal move, and a branch to explore from
+              here.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="font-score flex-none rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">3</span>
+            <span>
+              <span className="font-semibold text-foreground">Recurse.</span> For each move, place
+              the mark, then call minimax again one ply deeper with the turn flipped. This walks
+              all the way down to a terminal position before any value comes back up.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="font-score flex-none rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">4</span>
+            <span>
+              <span className="font-semibold text-foreground">Back up the value.</span> Once every
+              child has answered, MAX (X) keeps the highest of them and MIN (O) keeps the lowest
+              &mdash; that becomes this node's own value, exactly what its parent call was waiting
+              on.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <span className="font-score flex-none rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">5</span>
+            <span>
+              <span className="font-semibold text-foreground">Prune with alpha-beta.</span>{" "}
+              <span className="font-score text-xs">alpha</span> tracks the best value MAX can
+              already guarantee; <span className="font-score text-xs">beta</span> tracks the best
+              MIN can already guarantee. The moment{" "}
+              <span className="font-score text-xs">beta &le; alpha</span>, the remaining siblings
+              are skipped entirely &mdash; the other player would simply never let the game reach
+              them, so their exact scores can't change the outcome.
+            </span>
+          </li>
+        </ol>
+        <p className="mt-4 text-xs text-foreground-subtle">
+          The <span className="font-semibold text-foreground">search tree</span> on the right lets
+          you click through real positions and see this play out: pick any node to see which of
+          these five steps applies to it, in order, using its own numbers.
+        </p>
+
+        <div className="mt-8 overflow-hidden rounded-xl ring-1 ring-border bg-surface">
+          <table className="w-full text-left text-sm text-foreground-subtle">
+            <thead className="bg-background-secondary text-xs uppercase tracking-wider text-foreground-muted">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Score</th>
+                <th className="px-4 py-3 font-semibold">Meaning</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {[
+                { s: "+8", m: <>Human wins immediately (current position is already a winning state for Human).</> },
+                { s: "+7", m: <>Human wins immediately (current position is already a winning state for Human).</> },
+                { s: "+6", m: <>Human can force a win in <strong>2 moves</strong>.</> },
+                { s: "+5", m: <>Human can force a win in <strong>3 moves</strong>.</> },
+                { s: "+4", m: <>Human can force a win in <strong>4 moves</strong>.</> },
+                { s: "+3", m: <>Human can force a delayed win.</> },
+                { s: "+2", m: <>Human can force a win after a long sequence of moves.</> },
+                { s: "+1", m: <>Human eventually wins, but only after the maximum possible delay.</> },
+                { s: "0", m: <>Neither player can force a win. With perfect play, the game ends in a <strong>draw</strong>.</> },
+                { s: "-1", m: <>AI eventually wins, but AI can delay the loss as much as possible.</> },
+                { s: "-2", m: <>AI can force a win after a long sequence of moves.</> },
+                { s: "-3", m: <>AI can force a delayed win.</> },
+                { s: "-4", m: <>AI can force a win in about <strong>4 moves</strong>.</> },
+                { s: "-5", m: <>AI can force a win in <strong>3 moves</strong>.</> },
+                { s: "-6", m: <>AI can force a win in <strong>2 moves</strong>.</> },
+                { s: "-7", m: <>AI can force a win in <strong>1 move</strong>.</> },
+                { s: "-8", m: <>AI has already won (terminal state).</> },
+              ].map((row, idx) => (
+                <tr key={idx} className="transition hover:bg-surface-hover">
+                  <td className={`px-4 py-2 font-score font-bold whitespace-nowrap ${Number(row.s) > 0 ? "text-[#22e5c9]" : Number(row.s) < 0 ? "text-[#ff5f9e]" : "text-foreground-muted"}`}>
+                    {row.s}
+                  </td>
+                  <td className="px-4 py-2">{row.m}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+
+
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
@@ -524,14 +930,14 @@ function TicTacToeGame() {
             </button>
           </div>
 
-          <div className="relative">
+          <div className="relative mx-auto w-fit">
             <div className="grid grid-cols-3 gap-2.5">
               {board.map((cell, i) => (
                 <button
                   key={i}
                   onClick={() => playCell(i)}
                   disabled={over || turn !== TTT_HUMAN || cell !== null || thinking}
-                  className={`group flex aspect-square items-center justify-center rounded-xl border transition disabled:cursor-default ${winningLine?.includes(i)
+                  className={`group flex h-16 w-16 items-center justify-center rounded-xl border transition disabled:cursor-default ${winningLine?.includes(i)
                     ? "border-[#ffd166]/60 bg-[#ffd166]/10"
                     : "border-border bg-surface hover:enabled:border-accent/40 hover:enabled:bg-surface-hover"
                     }`}
@@ -549,7 +955,7 @@ function TicTacToeGame() {
                 <defs>
                   <linearGradient id="winLine" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stopColor="#ffd166" />
-                    <stop offset="100%" stopColor="#ff5f9e" />
+                    <stop offset="100%" stopColor="#22e5c9" />
                   </linearGradient>
                 </defs>
                 <line
@@ -574,12 +980,12 @@ function TicTacToeGame() {
 
           <p className="mt-5 flex items-center gap-2 text-xs leading-relaxed text-foreground-subtle">
             <span className="inline-flex items-center gap-1 font-medium">
-              <span className="h-2 w-2 rounded-full bg-gradient-to-br from-[#ff5f9e] to-[#ff9d5c]" />
+              <span className="h-2 w-2 rounded-full bg-gradient-to-br from-[#22e5c9] to-[#3b82f6]" />
               you (X)
             </span>
             <span className="text-foreground-subtle/50">vs</span>
             <span className="inline-flex items-center gap-1 font-medium">
-              <span className="h-2 w-2 rounded-full bg-gradient-to-br from-[#22e5c9] to-[#3b82f6]" />
+              <span className="h-2 w-2 rounded-full bg-gradient-to-br from-[#ff5f9e] to-[#ff9d5c]" />
               agent (O)
             </span>
           </p>
@@ -622,7 +1028,7 @@ function TicTacToeGame() {
             ))}
           </div>
 
-          <div className="mb-2 flex items-center gap-5">
+          <div className="mb-5 flex items-center gap-5">
             <MiniBoard board={nodeBoard} size={92} />
             <div>
               <p className="font-semibold text-lg">
@@ -641,52 +1047,49 @@ function TicTacToeGame() {
             </div>
           </div>
 
-          {!nodeOver && (
+          <div className="mb-6 rounded-xl bg-background-secondary/60 p-4 ring-1 ring-border">
+            <p className="mb-2.5 font-score text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground-subtle">
+              What minimax is doing at this node
+            </p>
+            <ol className="space-y-2 text-xs leading-relaxed text-foreground-subtle">
+              {explainNode(
+                nodePlayer,
+                nodeOver,
+                Boolean(nodeWinner),
+                nodeDraw,
+                children.length,
+                bestChildScore
+              ).map((step, idx) => (
+                <li key={idx} className="flex gap-2">
+                  <span className="font-score flex-none font-bold text-accent">{idx + 1}.</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {!nodeOver && treeViz && (
             <>
-              <div className="mt-7 flex justify-center">
-                <div className="h-6 w-px bg-gradient-to-b from-border-strong to-transparent" />
-              </div>
-              <div className="relative -mt-px flex flex-wrap justify-center gap-x-4 gap-y-6 border-t border-border pt-6">
-                {sortedChildren.map((child) => {
-                  const isOptimal = child.score === bestChildScore;
-                  return (
-                    <button
-                      key={child.move}
-                      onClick={() => setExplorePath([...explorePath, child.move])}
-                      className="group relative flex flex-col items-center gap-2"
-                    >
-                      <span className="absolute -top-6 h-6 w-px bg-gradient-to-b from-border-strong to-transparent" />
-                      <div
-                        className={`flex flex-col items-center gap-2 rounded-xl border p-2.5 transition ${isOptimal
-                          ? "border-[#ffd166]/50 bg-[#ffd166]/[0.06] shadow-[0_0_25px_-8px_rgba(255,209,102,0.5)]"
-                          : "border-border bg-surface"
-                          } group-hover:border-accent/40 group-hover:bg-surface-hover`}
-                      >
-                        <MiniBoard board={child.board} highlight={child.move} size={64} />
-                        <span
-                          className={`font-score rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ${scorePillClass(
-                            child.score
-                          )} ${scoreTextClass(child.score)}`}
-                        >
-                          {scoreLabel(child.score)}
-                        </span>
-                        {isOptimal && (
-                          <span className="text-[10px] font-semibold tracking-wide text-warning">
-                            optimal
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="mb-3 font-score text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground-subtle">
+                Search tree from here {treeViz.children[0]?.children.length ? "(a few plies deep)" : ""}
+              </p>
+              <TreeDiagram
+                root={treeViz}
+                onSelect={(path) => setExplorePath([...explorePath, ...path])}
+              />
+              <p className="mt-3 text-xs leading-relaxed text-foreground-subtle">
+                Gold outlines mark the optimal reply at every node &mdash; the branch minimax
+                actually backs its value up through. The diagram only expands as many plies as
+                stay readable; click any node to re-center the explorer there and reveal what's
+                below it.
+              </p>
             </>
           )}
 
           <div className="mt-7 border-t border-border pt-5 text-xs leading-relaxed text-foreground-subtle">
-            Scores run from <span className="font-score font-bold text-[#ff5f9e]">+10</span>{" "}
+            Scores run from <span className="font-score font-bold text-[#22e5c9]">+10</span>{" "}
             (fastest win for X) to{" "}
-            <span className="font-score font-bold text-[#22e5c9]">&minus;10</span> (fastest
+            <span className="font-score font-bold text-[#ff5f9e]">&minus;10</span> (fastest
             win for O), with <span className="font-score font-bold text-foreground-muted">0</span> a
             drawn line. Click any reply to descend a level and see how its own replies were
             scored.
@@ -1084,10 +1487,10 @@ function CoinRowGame() {
     >
       <div className="mb-6 flex justify-center gap-8 font-score text-sm">
         <span>
-          you: <span className="font-bold text-[#ff5f9e]">{p1Score}</span>
+          you: <span className="font-bold text-[#22e5c9]">{p1Score}</span>
         </span>
         <span>
-          agent: <span className="font-bold text-[#22e5c9]">{p2Score}</span>
+          agent: <span className="font-bold text-[#ff5f9e]">{p2Score}</span>
         </span>
       </div>
       <div className="flex items-center justify-center gap-2">
@@ -1216,9 +1619,9 @@ function PickANumberGame() {
             className={`flex h-16 w-16 items-center justify-center rounded-xl border font-score text-xl font-bold transition disabled:cursor-default ${winningLine?.includes(i)
               ? "border-[#ffd166]/60 bg-[#ffd166]/10"
               : cell === "X"
-                ? "border-[#ff5f9e]/40 bg-[#ff5f9e]/10 text-[#ff5f9e]"
+                ? "border-[#22e5c9]/40 bg-[#22e5c9]/10 text-[#22e5c9]"
                 : cell === "O"
-                  ? "border-[#22e5c9]/40 bg-[#22e5c9]/10 text-[#22e5c9]"
+                  ? "border-[#ff5f9e]/40 bg-[#ff5f9e]/10 text-[#ff5f9e]"
                   : "border-border bg-surface hover:enabled:border-accent/40 hover:enabled:bg-surface-hover text-foreground"
               }`}
           >
@@ -1500,8 +1903,8 @@ function DotsAndBoxesGame() {
           <p>Click any open edge (line segment) to draw it.</p>
           <p>Completing a box colors it in your player color and gives you another turn immediately.</p>
           <p>
-            Score &mdash; you: <span className="font-score font-bold text-[#ff5f9e]">{p1Boxes}</span>{" "}
-            agent: <span className="font-score font-bold text-[#22e5c9]">{p2Boxes}</span>
+            Score &mdash; you: <span className="font-score font-bold text-[#22e5c9]">{p1Boxes}</span>{" "}
+            agent: <span className="font-score font-bold text-[#ff5f9e]">{p2Boxes}</span>
           </p>
         </>
       }
@@ -1548,9 +1951,9 @@ function DotsAndBoxesGame() {
             <div
               key={idx}
               className={`flex h-[54px] w-[54px] items-center justify-center rounded-md transition ${owner === 1
-                ? "bg-[#ff5f9e]/20"
+                ? "bg-[#22e5c9]/20"
                 : owner === 2
-                  ? "bg-[#22e5c9]/20"
+                  ? "bg-[#ff5f9e]/20"
                   : "bg-transparent"
                 }`}
             >
@@ -1673,9 +2076,9 @@ function DomineeringGame() {
             onClick={() => click(i)}
             disabled={over || state.turn !== 1 || owner !== null || thinking}
             className={`flex h-14 w-14 items-center justify-center rounded-lg border transition disabled:cursor-default ${owner === 1
-              ? "border-[#ff5f9e]/40 bg-[#ff5f9e]/15"
+              ? "border-[#22e5c9]/40 bg-[#22e5c9]/15"
               : owner === 2
-                ? "border-[#22e5c9]/40 bg-[#22e5c9]/15"
+                ? "border-[#ff5f9e]/40 bg-[#ff5f9e]/15"
                 : "border-border bg-surface hover:enabled:border-accent/40 hover:enabled:bg-surface-hover"
               }`}
           />
@@ -1824,8 +2227,8 @@ function MiniOthelloGame() {
           <p>Place a disc so it traps one or more opponent discs between your new disc and another of your own, in a straight line.</p>
           <p>All trapped discs flip to your color.</p>
           <p>
-            Score &mdash; you: <span className="font-score font-bold text-[#ff5f9e]">{p1}</span>{" "}
-            agent: <span className="font-score font-bold text-[#22e5c9]">{p2}</span>
+            Score &mdash; you: <span className="font-score font-bold text-[#22e5c9]">{p1}</span>{" "}
+            agent: <span className="font-score font-bold text-[#ff5f9e]">{p2}</span>
           </p>
         </>
       }
@@ -2493,8 +2896,8 @@ function MiniCheckersGame() {
           <p>Click one of your pieces, then a highlighted destination.</p>
           <p>If a capture is available for any of your pieces, you must take it.</p>
           <p>
-            Pieces &mdash; you: <span className="font-score font-bold text-[#ff5f9e]">{p1Count}</span>{" "}
-            agent: <span className="font-score font-bold text-[#22e5c9]">{p2Count}</span>
+            Pieces &mdash; you: <span className="font-score font-bold text-[#22e5c9]">{p1Count}</span>{" "}
+            agent: <span className="font-score font-bold text-[#ff5f9e]">{p2Count}</span>
           </p>
         </>
       }
@@ -2951,7 +3354,7 @@ export default function Page() {
               <p className="font-score text-xs uppercase tracking-[0.3em] text-accent font-semibold">
                 Game Playing Arcade
               </p>
-              <h1 className="font-display mt-3 bg-gradient-to-r from-[#ff5f9e] via-[#ffd166] to-[#22e5c9] bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
+              <h1 className="font-display mt-3 bg-gradient-to-r from-[#22e5c9] via-[#ffd166] to-[#ff5f9e] bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
                 15 Games, One Search Algorithm
               </h1>
               <p className="mt-3 max-w-2xl text-foreground-muted">
