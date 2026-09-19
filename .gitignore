@@ -1,0 +1,26 @@
+﻿# Archives & Backups
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Old project folders (kept locally, excluded from repository)
+math-syllabus/
+Maths Portions/
+imp/
+presentation/
+DEEP LEARNING PROJECT TOPICS.txt
+
+# Node & Next.js build artifacts
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

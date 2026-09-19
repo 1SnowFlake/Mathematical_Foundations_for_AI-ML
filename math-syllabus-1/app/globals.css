@@ -1,0 +1,875 @@
+@import "tailwindcss";
+
+/* ================================================================
+   GLOBAL STYLESHEET — "textbook meets playground"
+   ================================================================
+   This file defines the site's design system (colors, spacing,
+   shadows, radii) as CSS custom properties, then layers on
+   component-level styles built from those properties.
+
+   Structure of this file:
+     1. Design Tokens        — the source-of-truth variables
+     2. Tailwind Registration — wiring tokens into Tailwind v4
+     3. Base Styles          — body-level defaults
+     4. MDX Article Content Styling    — long-form article/markdown content
+     5. Widget & Challenge Blocks — custom callout components
+     6. Third-Party Library Overrides — KaTeX, Leva, React Flow
+     7. Scrollbar Styling
+     8. Hero & Landing Page  — gradients, keyframes, entrance animations
+     9. Progress Indicators  — bars and circular rings
+    10. Stat Counters
+    11. Comparison Table
+    12. Architecture Diagram (SVG)
+    13. Section Card
+    14. Topic Completion Badge
+
+   Theming: every color/shadow value is defined once under :root
+   (light mode) and re-defined under .dark (dark mode). Components
+   below should always reference the var(--token) form rather than
+   hardcoding colors, so both themes stay in sync automatically.
+   ================================================================ */
+
+
+/* ================================================================
+   1. DESIGN TOKENS
+   ================================================================
+   Single source of truth for the entire visual system. Change a
+   value here and it propagates everywhere the token is used.
+   ================================================================ */
+
+:root {
+  /* --- Surfaces --------------------------------------------------
+     Layered backgrounds, lightest to slightly-shaded, used to
+     create depth (page bg -> section bg -> card surface). */
+  --background: #fafaf9;
+  /* page background */
+  --background-secondary: #f5f5f4;
+  /* subtly shaded sections (e.g. code blocks) */
+  --surface: #ffffff;
+  /* cards, panels, raised elements */
+  --surface-hover: #f5f5f4;
+  /* hover state for surface elements */
+
+  /* --- Text --------------------------------------------------
+     Three-tier text hierarchy: primary copy, secondary/supporting
+     copy, and the lightest tier for placeholders/timestamps/etc. */
+  --foreground: #1c1917;
+  /* primary text */
+  --foreground-muted: #78716c;
+  /* secondary text (captions, metadata) */
+  --foreground-subtle: #a8a29e;
+  /* tertiary text (disabled, faint hints) */
+
+  /* --- Accent --------------------------------------------------
+     Warm indigo-violet used for links, buttons, highlights, and
+     any interactive/focal element. */
+  --accent: #6366f1;
+  /* default accent (links, icons, active states) */
+  --accent-hover: #4f46e5;
+  /* darker accent for hover/active interaction */
+  --accent-muted: #e0e7ff;
+  /* light accent fill (badges, underlines) */
+  --accent-subtle: #eef2ff;
+  /* faintest accent tint (callout backgrounds) */
+
+  /* --- Semantic --------------------------------------------------
+     Status colors. Use these (not raw accent) for anything
+     communicating success/warning/error/info state. */
+  --success: #059669;
+  --warning: #d97706;
+  --error: #dc2626;
+  --info: #0284c7;
+
+  /* --- Borders -------------------------------------------------- */
+  --border: #e7e5e4;
+  /* default hairline border */
+  --border-strong: #d6d3d1;
+  /* emphasized border (hover, active) */
+
+  /* --- Shadows --------------------------------------------------
+     Elevation scale: sm (barely lifted) -> md (card) -> lg (modal/hover). */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+
+  /* --- Radius --------------------------------------------------
+     Consistent rounding scale from small controls to large hero cards. */
+  --radius-sm: 6px;
+  /* inputs, inline code, chips */
+  --radius-md: 10px;
+  /* buttons, code blocks */
+  --radius-lg: 16px;
+  /* cards, panels */
+  --radius-xl: 24px;
+  /* hero sections, large containers */
+
+  /* --- Layout --------------------------------------------------- */
+  --sidebar-width: 280px;
+}
+
+/* Dark mode: re-declares the same token names with dark-appropriate
+   values. Because components only ever reference var(--token),
+   toggling the .dark class on a parent element re-themes everything
+   below with no further changes needed. */
+.dark {
+  --background: #0c0a09;
+  --background-secondary: #1c1917;
+  --surface: #1c1917;
+  --surface-hover: #292524;
+
+  --foreground: #fafaf9;
+  --foreground-muted: #a8a29e;
+  --foreground-subtle: #78716c;
+
+  --accent: #818cf8;
+  --accent-hover: #6366f1;
+  --accent-muted: #312e81;
+  --accent-subtle: #1e1b4b;
+
+  --border: #292524;
+  --border-strong: #44403c;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}
+
+
+/* ================================================================
+   2. TAILWIND REGISTRATION
+   ================================================================
+   Exposes the tokens above as Tailwind utility classes via the
+   v4 @theme directive, e.g. var(--color-accent) becomes usable as
+   `bg-accent`, `text-accent-muted`, `shadow-md`, `rounded-lg`, etc.
+   Keep this block in sync whenever a new token is added above.
+   ================================================================ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), "JetBrains Mono", monospace;
+}
+
+
+/* ================================================================
+   3. BASE STYLES
+   ================================================================ */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  /* Smooth color transition when toggling light/dark mode. */
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+
+/* ================================================================
+   4. MDX ARTICLE CONTENT STYLING
+   ================================================================
+   Applies to `.article-content` containers wrapping rendered Markdown/MDX
+   (articles, docs, blog posts). Overrides default browser spacing
+   and typography to match the design tokens above.
+   ================================================================ */
+
+.article-content {
+  --article-body: var(--foreground);
+  --article-headings: var(--foreground);
+  --article-links: var(--accent);
+  --article-code: var(--accent);
+
+  max-width: 72ch;
+  /* optimal line length for readability */
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--article-body);
+}
+
+.article-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 1rem;
+  color: var(--article-headings);
+}
+
+.article-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--article-headings);
+  border-bottom: 1px solid var(--border);
+  /* visually separates sections */
+  padding-bottom: 0.5rem;
+}
+
+.article-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--article-headings);
+}
+
+.article-content p {
+  margin-bottom: 1.25rem;
+}
+
+.article-content a {
+  color: var(--article-links);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-muted);
+  /* faint underline at rest... */
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.article-content a:hover {
+  text-decoration-color: var(--accent);
+  /* ...solidifies to full accent on hover */
+}
+
+.article-content code {
+  /* Inline code, e.g. `variableName` */
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875em;
+  background: var(--background-secondary);
+  padding: 0.2em 0.4em;
+  border-radius: var(--radius-sm);
+  color: var(--article-code);
+}
+
+.article-content pre {
+  /* Fenced code blocks. `.article-content code` inside `pre` is reset below
+     to avoid double-styling (no pill background inside a code block). */
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.article-content pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+}
+
+.article-content blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--foreground-muted);
+  font-style: italic;
+}
+
+.article-content ul,
+.article-content ol {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-content strong {
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.article-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+
+/* ================================================================
+   5. WIDGET & CHALLENGE BLOCKS
+   ================================================================
+   Custom callout components used inside MDX content to embed
+   interactive demos (`.widget-card`) or "try it yourself" prompts
+   (`.challenge-block`).
+   ================================================================ */
+
+/* Container for embedding an interactive component (e.g. a live
+   code demo or configurator) inside an article. */
+.widget-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin: 2rem 0;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.widget-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+}
+
+.widget-card__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+/* Highlighted callout prompting the reader to try something
+   themselves. Left accent bar + tinted background make it stand
+   out from surrounding prose without being alarming (unlike a
+   warning/error color). */
+.challenge-block {
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-muted);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin: 2rem 0;
+}
+
+.challenge-block__label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+
+/* ================================================================
+   6. THIRD-PARTY LIBRARY OVERRIDES
+   ================================================================
+   These blocks re-theme external libraries so they match the
+   site's design tokens instead of their own default styling.
+   Selectors here are dictated by each library's DOM/class output,
+   not by us, so they intentionally break from the naming
+   conventions used elsewhere in this file.
+   ================================================================ */
+
+/* --- KaTeX (math typesetting) ----------------------------------- */
+.katex-display {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  /* long equations scroll instead of overflowing the page */
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+.katex {
+  font-size: 1.1em;
+  /* KaTeX's default renders slightly small next to body text */
+}
+
+.dark .katex .katex-html {
+  color: var(--foreground);
+  /* KaTeX hardcodes black glyphs; force theme color in dark mode */
+}
+
+/* --- Leva (debug/config control panels) --------------------------
+   Leva exposes its own CSS custom properties for theming; we map
+   ours onto theirs with !important since Leva's own stylesheet
+   loads after ours and would otherwise win the cascade. */
+[class*="leva-"] {
+  --leva-sizes-controlWidth: 66% !important;
+  --leva-colors-elevation1: var(--surface) !important;
+  --leva-colors-elevation2: var(--background-secondary) !important;
+  --leva-colors-elevation3: var(--background) !important;
+  --leva-colors-accent1: var(--accent) !important;
+  --leva-colors-accent2: var(--accent-hover) !important;
+  --leva-colors-accent3: var(--accent-muted) !important;
+  --leva-colors-highlight1: var(--foreground) !important;
+  --leva-colors-highlight2: var(--foreground-muted) !important;
+  --leva-colors-highlight3: var(--foreground-subtle) !important;
+  --leva-fonts-mono: var(--font-mono) !important;
+}
+
+/* --- React Flow (node/graph diagrams) ---------------------------- */
+.react-flow__background {
+  background: var(--surface) !important;
+}
+
+.react-flow__edge-path {
+  stroke: var(--foreground-muted) !important;
+  stroke-width: 2 !important;
+}
+
+.react-flow__node {
+  /* NOTE: forces every React Flow node to render as a circle.
+     If a future diagram needs rectangular/custom-shaped nodes,
+     this rule will need to be scoped to a specific flow instance
+     rather than applying globally. */
+  border-radius: 50% !important;
+}
+
+
+/* ================================================================
+   7. SCROLLBAR STYLING
+   ================================================================
+   WebKit-only (Chrome/Safari/Edge) custom scrollbar to match the
+   site's minimal aesthetic. Firefox falls back to its native
+   scrollbar since it doesn't support these pseudo-elements.
+   ================================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--foreground-subtle);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground-muted);
+}
+
+
+/* ================================================================
+   Utility: theme-change transition helper
+   ================================================================
+   Apply `.transition-theme` to any element that should animate
+   smoothly when colors/borders change (e.g. on dark-mode toggle).
+   ================================================================ */
+
+.transition-theme {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+
+/* ================================================================
+   8. HERO & LANDING PAGE
+   ================================================================
+   Keyframes and entrance-animation utilities used primarily on the
+   homepage/hero section: animated gradient text, fade-ins on
+   scroll/load, and a pulsing glow for call-to-action elements.
+   ================================================================ */
+
+@keyframes gradient-shift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+  }
+}
+
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animated multi-color gradient clipped to text — used for the
+   hero headline. Colors are hardcoded (not tokenized) since this
+   gradient is a deliberate brand flourish independent of theme. */
+.hero-gradient {
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899, #6366f1);
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Soft ambient gradient wash for hero section backgrounds.
+   Dark mode uses higher opacity so the gradient stays visible
+   against the darker page background. */
+.hero-bg-gradient {
+  background: linear-gradient(135deg,
+      rgba(99, 102, 241, 0.08),
+      rgba(168, 85, 247, 0.05),
+      rgba(236, 72, 153, 0.03));
+}
+
+.dark .hero-bg-gradient {
+  background: linear-gradient(135deg,
+      rgba(99, 102, 241, 0.15),
+      rgba(168, 85, 247, 0.1),
+      rgba(236, 72, 153, 0.05));
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+/* Stagger helpers: pair with animate-fade-in(-up) to sequence
+   multiple elements entering one after another, e.g.
+   <div class="animate-fade-in-up animate-delay-2"> */
+.animate-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.animate-delay-4 {
+  animation-delay: 0.4s;
+}
+
+.animate-delay-5 {
+  animation-delay: 0.5s;
+}
+
+
+/* ================================================================
+   9. PROGRESS INDICATORS
+   ================================================================
+   Two variants: a horizontal bar (`.progress-bar`) and a circular
+   ring (`.progress-ring`), both used to show completion percentage
+   through a course/tutorial.
+   ================================================================ */
+
+.progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar__fill {
+  /* Width set inline/via JS based on % complete. */
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), #a855f7);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Circular variant: intended for use on an SVG <circle>. Rotated
+   -90deg so the fill starts at 12 o'clock instead of 3 o'clock.
+   Requires stroke-dasharray/stroke-dashoffset to be set via JS
+   based on the circle's circumference and completion %. */
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring__bg {
+  fill: none;
+  stroke: var(--border);
+}
+
+.progress-ring__fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ================================================================
+   10. STAT COUNTERS
+   ================================================================
+   Cards displaying a single number + label (e.g. "1,200 Students").
+   The `count-up` keyframe pairs well with a JS counter animation
+   that increments the displayed number over the same duration.
+   ================================================================ */
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  text-align: center;
+  animation: fade-in-up 0.5s ease-out both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card__number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+  animation: count-up 0.6s ease-out both;
+}
+
+.stat-card__label {
+  font-size: 0.8125rem;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+
+/* ================================================================
+   11. COMPARISON TABLE
+   ================================================================
+   Styled <table> for feature/pricing comparisons. Supports an
+   optional `.featured-column` class on a <th>/<td> to visually
+   emphasize one column (e.g. the recommended plan).
+   ================================================================ */
+
+.comparison-table {
+  width: 100%;
+  border-collapse: separate;
+  /* required for border-radius to apply to the table edges */
+  border-spacing: 0;
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  /* clips header/cell backgrounds to the rounded corners */
+}
+
+.comparison-table th {
+  background: var(--background-secondary);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.comparison-table td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground-muted);
+  vertical-align: top;
+}
+
+.comparison-table tr:last-child td {
+  border-bottom: none;
+}
+
+.comparison-table tr:hover td {
+  background: var(--surface-hover);
+}
+
+/* Apply to a <th>/<td> to mark it as the featured/recommended
+   column — tints the cell and adds a left accent border. When
+   used on a header cell, pair with `th.featured-column` (below) so
+   the accent border spans the full header height. */
+.comparison-table .featured-column {
+  background: var(--accent-subtle);
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.comparison-table .featured-column:first-child,
+.comparison-table th.featured-column {
+  border-left: 2px solid var(--accent);
+}
+
+
+/* ================================================================
+   12. ARCHITECTURE DIAGRAM (SVG)
+   ================================================================
+   Styles for hand-built or generated SVG system/architecture
+   diagrams. Apply these classes to the corresponding SVG elements:
+     <rect class="diagram-node">      — a box representing a component
+     <text class="diagram-label">     — the label inside/near a node
+     <path class="diagram-connector"> — a line/arrow connecting nodes
+   Requires an <marker id="arrowhead"> defined in the SVG's <defs>
+   for the connector arrowheads to render.
+   ================================================================ */
+
+.diagram-node {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  rx: 10;
+  ry: 10;
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.diagram-node:hover {
+  fill: var(--accent-subtle);
+  stroke: var(--accent);
+}
+
+.diagram-label {
+  fill: var(--foreground);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.diagram-connector {
+  stroke: var(--foreground-subtle);
+  stroke-width: 1.5;
+  fill: none;
+  marker-end: url(#arrowhead);
+}
+
+
+/* ================================================================
+   13. SECTION CARD
+   ================================================================
+   General-purpose clickable/hoverable card used for nav grids,
+   topic lists, etc. The ::before pseudo-element draws a gradient
+   accent bar across the top that fades in on hover.
+   ================================================================ */
+
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  /* keeps the ::before accent bar within rounded corners */
+}
+
+.section-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), #a855f7);
+  opacity: 0;
+  /* hidden until hover */
+  transition: opacity 0.25s ease;
+}
+
+.section-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.section-card:hover::before {
+  opacity: 1;
+}
+
+
+/* ================================================================
+   14. TOPIC COMPLETION BADGE
+   ================================================================
+   Small circular status indicator (e.g. next to a lesson/topic in
+   a sidebar list). Three states, applied as a modifier class:
+     --done     fully completed  (solid success color, checkmark icon inside)
+     --visited  opened, not finished (tinted accent)
+     --empty    not yet visited  (outline only)
+   ================================================================ */
+
+.completion-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.completion-badge--done {
+  background: var(--success);
+  color: white;
+}
+
+.completion-badge--visited {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.completion-badge--empty {
+  background: var(--background-secondary);
+  border: 1.5px solid var(--border);
+}

@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linear Transformations — Where Spaces Get Manipulated</title>
+  <style>
+    :root {
+      --bg: #0d1017;
+      --bg2: #161b26;
+      --bg3: #1f2637;
+      --border: #2d374d;
+      --text: #e6ebf5;
+      --muted: #8b95b5;
+      --accent: #7c6af7;
+      --accent-glow: rgba(124, 106, 247, 0.25);
+      --accent2: #38d9a9;
+      --accent2-glow: rgba(56, 217, 169, 0.2);
+      --red: #ff6b6b;
+      --blue: #4dabf7;
+      --green: #51cf66;
+      --yellow: #fcc419;
+      --purple: #cc5de8;
+      --orange: #ff922b;
+      --cyan: #22b8cf;
+      --grid: #202738;
+      --axis: #3d4a66;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --bg2: #ffffff;
+      --bg3: #edf2f9;
+      --border: #cbd5e1;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #5b4ae4;
+      --accent-glow: rgba(91, 74, 228, 0.15);
+      --accent2: #0ca678;
+      --accent2-glow: rgba(12, 166, 120, 0.15);
+      --grid: #e2e8f0;
+      --axis: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.75rem;
+      background: rgba(22, 27, 38, 0.88);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    [data-theme="light"] header {
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    header h1 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    header h1 span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+      background: var(--bg3);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .toc {
+      display: flex;
+      gap: 0.3rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toc a {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.22rem 0.55rem;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .toc a:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    #theme-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    #theme-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2.2rem 1.5rem 7rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-glow);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid rgba(124, 106, 247, 0.3);
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, var(--text) 30%, var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 760px;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+
+    .hero-sub strong {
+      color: var(--text);
+    }
+
+    section {
+      margin-bottom: 5rem;
+      padding-top: 1rem;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .section-label .app-tag {
+      background: var(--bg3);
+      color: var(--accent2);
+      padding: 0.1rem 0.45rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-size: 0.68rem;
+    }
+
+    section h2 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
+    }
+
+    .explain {
+      font-size: 0.94rem;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 1.25rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.95rem;
+    }
+
+    .explain strong {
+      color: var(--text);
+    }
+
+    .canvas-wrap {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem 1.5rem;
+      padding: 1.1rem 1.35rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg3);
+      align-items: center;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 125px;
+      height: 5px;
+      background: var(--border);
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 0 3px var(--accent-glow);
+      transition: transform 0.15s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+    }
+
+    .val-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+      background: var(--border);
+      padding: 0.15rem 0.45rem;
+      border-radius: 5px;
+      min-width: 2.4rem;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type=number] {
+      width: 58px;
+      padding: 0.28rem 0.45rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 7px;
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type=number]:focus {
+      border-color: var(--accent);
+    }
+
+    button.preset,
+    .btn-action {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0.8rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font);
+    }
+
+    button.preset:hover,
+    button.preset.active,
+    .btn-action:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .toggle-btn {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font);
+    }
+
+    .toggle-btn.on {
+      background: var(--accent2);
+      color: #072a1e;
+      font-weight: 700;
+      border-color: var(--accent2);
+      box-shadow: 0 4px 12px var(--accent2-glow);
+    }
+
+    .info-box {
+      margin-top: 0.85rem;
+      padding: 0.75rem 1.15rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.15rem 0.55rem;
+      border-radius: 5px;
+      font-weight: 800;
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tag-indep {
+      background: rgba(81, 207, 102, 0.16);
+      color: var(--green);
+      border: 1px solid rgba(81, 207, 102, 0.3);
+    }
+
+    .tag-dep {
+      background: rgba(255, 107, 107, 0.16);
+      color: var(--red);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+
+    .tag-info {
+      background: rgba(77, 171, 247, 0.16);
+      color: var(--blue);
+      border: 1px solid rgba(77, 171, 247, 0.3);
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+      width: 116px;
+    }
+
+    .matrix-grid input {
+      width: 52px;
+      text-align: center;
+    }
+
+    .matrix-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      text-align: center;
+    }
+
+    .step-math {
+      margin-top: 0.85rem;
+      padding: 0.85rem 1.15rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-family: 'SF Mono', Consolas, Monaco, monospace;
+      line-height: 1.85;
+      color: var(--text);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.25rem;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .chip-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .pipeline-stages {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      margin: 1.25rem 0;
+    }
+
+    .pipe-step {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      text-align: center;
+      flex: 1;
+      min-width: 140px;
+      transition: all 0.2s;
+    }
+
+    .pipe-step.active {
+      border-color: var(--accent);
+      background: var(--bg3);
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .pipe-step .p-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .pipe-step .p-mat {
+      font-family: monospace;
+      font-size: 0.76rem;
+      color: var(--accent2);
+      margin-top: 0.25rem;
+    }
+
+    .pipe-arr {
+      color: var(--muted);
+      font-size: 1.2rem;
+      font-weight: 900;
+    }
+
+    .bridge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .bridge-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .bridge-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+
+    .bridge-icon {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .bridge-card h4 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+    }
+
+    .bridge-card p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .bridge-card .bridge-math {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--accent2);
+      margin-top: 0.5rem;
+      background: var(--bg3);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    @media(max-width: 768px) {
+      header {
+        padding: 0.6rem 1rem;
+      }
+
+      .toc {
+        display: none;
+      }
+
+      main {
+        padding: 1.5rem 1rem 5rem;
+      }
+
+      .hero-title {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+</head>
+
+<body data-theme="dark">
+
+  <header>
+    <h1>
+      Spatial Engine
+      <span>Linear Transformations</span>
+    </h1>
+    <nav class="toc">
+      <a href="#s1">1. Basis</a>
+      <a href="#s2">2. Robotics Nav</a>
+      <a href="#s3">3. Arm DOF</a>
+      <a href="#s4">4. 3D Reach</a>
+      <a href="#s5">5. Graphics</a>
+      <a href="#s6">6. Image Warp</a>
+      <a href="#s7">7. Camera Frame</a>
+      <a href="#s8">8. Pipeline &amp; AI</a>
+    </nav>
+    <button id="theme-btn">&#9728; Light</button>
+  </header>
+
+  <main>
+
+    <div style="margin-bottom: 2rem;">
+      <div class="hero-badge">&#10024; Applied Linear Algebra</div>
+      <h1 class="hero-title">Where Spaces Get Manipulated</h1>
+      <p class="hero-sub">
+        Linear transformations are not abstract equations &mdash; they are the <strong>computational engine of the
+          physical and virtual world</strong>. From robotic arms and autonomous vehicle frames, to real-time 3D game
+        engines, computer vision cameras, and dimensionality reduction (PCA / SVD), explore how matrices reshape space
+        interactively.
+      </p>
+    </div>
+
+    <!-- SECTION 1 -->
+    <section id="s1">
+      <div class="section-label">Section 1 <span class="app-tag">Core Mechanics</span></div>
+      <h2>Vectors as Scaled Basis Vectors</h2>
+      <p class="explain">
+        Every coordinate system begins with a choice of unit vectors: <strong>&#238;</strong> (one step right) and
+        <strong>&#309;</strong> (one step up). Any point in space is simply a recipe: scale &#238; by x, scale &#309; by
+        y, and add them tip-to-tail. Coordinates are not just numbers &mdash; they are weights of basis vectors.
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="c1" height="420"></canvas>
+      </div>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label style="color:var(--red)">x &middot; &#238;</label>
+          <input type="range" id="s1x" min="-5" max="5" step="0.1" value="3">
+          <span class="val-badge" id="s1x-val">3.0</span>
+        </div>
+        <div class="ctrl-group">
+          <label style="color:var(--blue)">y &middot; &#309;</label>
+          <input type="range" id="s1y" min="-5" max="5" step="0.1" value="2">
+          <span class="val-badge" id="s1y-val">2.0</span>
+        </div>
+        <div style="margin-left:auto; font-size:0.82rem; color:var(--muted)">
+          Drag sliders to see component addition
+        </div>
+      </div>
+      <div class="info-box">
+        <span>Vector Equation:</span>
+        <strong id="s1-formula" style="color:var(--purple)">v = 3.0&middot;&#238; + 2.0&middot;&#309; = (3.0,
+          2.0)</strong>
+      </div>
+      <div class="legend">
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--red)"></div> Unit Basis &#238; [1, 0]
+        </div>
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--blue)"></div> Unit Basis &#309; [0, 1]
+        </div>
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--purple)"></div> Resultant Vector v
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section id="s2">
+      <div class="section-label">Section 2 <span class="app-tag">&#129517; GPS &amp; Robotics Navigation</span></div>
+      <h2>Custom Bases: Vehicle &amp; Sensor Coordinate Frames</h2>
+      <p class="explain">
+        In GPS and robotics, the room or earth has a fixed <strong>World Frame</strong> (East = &#238;, North = &#309;).
+        But an autonomous vehicle or drone has its own <strong>Body Frame</strong>: <strong>b&#8321;</strong> (Forward
+        heading) and <strong>b&#8322;</strong> (Port/Left lateral). Drag the orange &amp; green arrows to rotate or skew
+        the vehicle's frame. The vehicle's target command (a, b) moves physically in the world as a&middot;b&#8321; +
+        b&middot;b&#8322;.
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="c2" height="420"></canvas>
+      </div>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label style="color:var(--orange)">a (Forward)</label>
+          <input type="range" id="s2a" min="-3" max="3" step="0.05" value="1.5">
+          <span class="val-badge" id="s2a-val">1.50</span>
+        </div>
+        <div class="ctrl-group">
+          <label style="color:var(--green)">b (Left lateral)</label>
+          <input type="range" id="s2b" min="-3" max="3" step="0.05" value="1.0">
+          <span class="val-badge" id="s2b-val">1.00</span>
+        </div>
+        <button class="toggle-btn" id="s2-grid-btn">Show Vehicle Grid</button>
+        <button class="toggle-btn" id="s2-scatter-btn">Show Reachable Points</button>
+      </div>
+      <div class="info-box" id="s2-info">
+        <span class="tag tag-info">Navigation Frame</span> Drag arrowheads <strong>b&#8321;</strong> (heading) &amp;
+        <strong>b&#8322;</strong> (lateral) to re-orient the vehicle.
+      </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section id="s3">
+      <div class="section-label">Section 3 <span class="app-tag">&#129302; Robotics Kinematics</span></div>
+      <h2>Span &amp; Independence: Degrees of Freedom &amp; Singularities</h2>
+      <p class="explain">
+        In robotics, actuators provide directions of motion. If two joint directions <strong>v&#8321;</strong> and
+        <strong>v&#8322;</strong> are <strong>linearly independent</strong>, their span covers the entire 2D workbench
+        &mdash; the end-effector possesses <strong>2 Degrees of Freedom (2 DOF)</strong>. But if they become parallel
+        (collinear), the cross product drops to zero: the robot enters a <strong>kinematic singularity (gimbal
+          lock)</strong> and can only move along a single line!
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="c3" height="420"></canvas>
+      </div>
+      <div class="controls">
+        <button class="preset" id="s3-btn-indep">Set Independent (2 DOF)</button>
+        <button class="preset" id="s3-btn-sing">Trigger Singularity (1 DOF)</button>
+        <button class="preset" id="s3-btn-ortho">Orthogonal Work-Envelope</button>
+        <div style="margin-left:auto; font-size:0.8rem; color:var(--muted)">
+          Drag arrow tips to test singularity boundary
+        </div>
+      </div>
+      <div class="info-box" id="s3-info">
+        <span class="tag tag-indep" id="s3-tag">2 DOF &mdash; Independent</span>
+        <span>Workspace covers the full 2D plane.</span>
+      </div>
+      <div class="legend">
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--red)"></div> Joint Actuator v&#8321;
+        </div>
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--blue)"></div> Joint Actuator v&#8322;
+        </div>
+        <div class="chip">
+          <div class="chip-dot" style="background:rgba(124, 106, 247, 0.4)"></div> Reachable Workspace (Span)
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section id="s4">
+      <div class="section-label">Section 4 <span class="app-tag">&#128377;&#65039; 3D Robotics &amp; Geometry</span>
+      </div>
+      <h2>Span in 3D: Unlocking Volumetric Space</h2>
+      <p class="explain">
+        In 3D space, two actuator vectors sweep out a flat 2D plane passing through the origin. A 2-joint arm can never
+        reach outside this surface. Introducing a 3rd vector <strong>v&#8323;</strong> either keeps it trapped (linearly
+        dependent) or breaks free into the 3rd dimension &mdash; expanding the span to the entire 3D volume. Drag to
+        orbit the 3D scene.
+      </p>
+      <div class="canvas-wrap" id="canvas3d" style="height: 480px;"></div>
+      <div class="controls">
+        <button class="toggle-btn" id="v3-toggle">+ Add 3rd Independent Actuator (3 DOF)</button>
+        <span style="font-size:0.82rem; color:var(--muted); margin-left:auto;">&#128070; Click &amp; drag to rotate 3D
+          camera</span>
+      </div>
+      <div class="info-box" id="s4-info">
+        <span class="tag tag-info">Planar Reach</span> 2 actuators span a flat 2D slice through 3D space.
+      </div>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section id="s5">
+      <div class="section-label">Section 5 <span class="app-tag">&#127918; Computer Graphics Engine</span></div>
+      <h2>Matrix Transformations: The 2D Geometry Engine</h2>
+      <p class="explain">
+        In video games, every model, character sprite, and camera is defined by vertices. A 2&times;2 matrix M = [
+        col&#8321; | col&#8322; ] is the fundamental engine that transforms this space: <strong>Column 1 is where &#238;
+          lands, and Column 2 is where &#309; lands</strong>. Linearity ensures that straight lines remain straight,
+        parallel lines remain parallel, and the origin (0,0) stays locked in place.
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="c5" height="480"></canvas>
+      </div>
+      <div class="controls" style="flex-direction:column; gap:0.85rem; align-items:stretch;">
+        <div style="display:flex; flex-wrap:wrap; gap:1.25rem; align-items:center;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.35rem; font-weight:700;">Matrix M = [
+              col&#8321; | col&#8322; ]</div>
+            <div class="matrix-grid">
+              <input type="number" id="ma" value="1" step="0.1">
+              <input type="number" id="mb" value="0" step="0.1">
+              <input type="number" id="mc" value="0" step="0.1">
+              <input type="number" id="md" value="1" step="0.1">
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.35rem; font-weight:700;">Engine Presets
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+              <button class="preset active" id="p-identity">Identity (Rest)</button>
+              <button class="preset" id="p-rotate">90&#176; Rotate</button>
+              <button class="preset" id="p-shear">Motion Shear</button>
+              <button class="preset" id="p-scale">Scale / Zoom</button>
+              <button class="preset" id="p-squeeze">Squeeze (Squash)</button>
+              <button class="preset" id="p-squish">Flatten / Project (det=0)</button>
+            </div>
+          </div>
+          <div>
+            <button class="btn-action" id="animate-btn"
+              style="padding:0.6rem 1.2rem; font-size:0.85rem; background:var(--accent); color:#fff;">&#9654; Animate
+              Warp</button>
+          </div>
+        </div>
+      </div>
+      <div id="transform-steps" class="step-math" style="display:none;"></div>
+      <div class="legend">
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--red)"></div> &#238; &rarr; col&#8321; (a, c)
+        </div>
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--blue)"></div> &#309; &rarr; col&#8322; (b, d)
+        </div>
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--yellow)"></div> Transformed Game Craft
+        </div>
+        <div class="chip">
+          <div class="chip-dot" style="background:var(--purple)"></div> Draggable Test Vector
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6 -->
+    <section id="s6">
+      <div class="section-label">Section 6 <span class="app-tag">&#128444;&#65039; Image Processing &amp; Data
+          Augmentation</span></div>
+      <h2>Matrix Transformations on Images &amp; Textures</h2>
+      <p class="explain">
+        In computer vision and deep learning, datasets are augmented by applying affine matrix transformations (e.g.
+        PyTorch's <code>RandomAffine</code>). Convolutional layers and GPU shaders deform image coordinates using
+        matrices. Adjust the parameters below to see an actual pixel sprite and test pattern physically deform via
+        real-time linear mapping.
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="c6" height="440"></canvas>
+      </div>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>Rotate &theta;</label>
+          <input type="range" id="s6-rot" min="-180" max="180" step="1" value="0">
+          <span class="val-badge" id="s6-rot-val">0&deg;</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Scale X</label>
+          <input type="range" id="s6-sx" min="0.2" max="2.5" step="0.05" value="1.0">
+          <span class="val-badge" id="s6-sx-val">1.00</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Scale Y</label>
+          <input type="range" id="s6-sy" min="0.2" max="2.5" step="0.05" value="1.0">
+          <span class="val-badge" id="s6-sy-val">1.00</span>
+        </div>
+        <div class="ctrl-group">
+          <label>Shear X</label>
+          <input type="range" id="s6-shx" min="-1.5" max="1.5" step="0.05" value="0">
+          <span class="val-badge" id="s6-shx-val">0.00</span>
+        </div>
+        <button class="preset" id="s6-reset">Reset Image</button>
+      </div>
+      <div class="info-box" id="s6-info">
+        <span class="tag tag-info">Affine Transform Matrix</span>
+        <span id="s6-mat-display" style="font-family:monospace;">M = [ 1.00, 0.00 ; 0.00, 1.00 ] &bull; det(M) =
+          1.00</span>
+      </div>
+    </section>
+
+    <!-- SECTION 7 -->
+    <section id="s7">
+      <div class="section-label">Section 7 <span class="app-tag">&#128065;&#65039; Computer Vision &amp; Autonomous
+          Driving</span></div>
+      <h2>Coordinate Transformations: Camera Frame &harr; World Frame</h2>
+      <p class="explain">
+        A self-driving car's on-board camera detects an obstacle at local coordinates (x_cam, y_cam). But the navigation
+        planner needs its position in the city (x_world, y_world). Matrices serve as <strong>coordinate
+          translators</strong>: P_world = R(&theta;) &middot; P_cam + T. Drag the camera to aim it, or drag the
+        pedestrian/obstacle marker to see coordinates convert between both frames in real time.
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="c7" height="440"></canvas>
+      </div>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label style="color:var(--cyan)">Camera Angle &theta;</label>
+          <input type="range" id="s7-cam-ang" min="-180" max="180" step="2" value="35">
+          <span class="val-badge" id="s7-cam-ang-val">35&deg;</span>
+        </div>
+        <button class="preset" id="s7-center-btn">Re-Center Camera</button>
+        <span style="font-size:0.8rem; color:var(--muted); margin-left:auto;">
+          &#128073; Drag the <strong>cyan camera</strong> or the <strong>yellow obstacle</strong>
+        </span>
+      </div>
+      <div class="info-box">
+        <div
+          style="width:100%; display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem; font-family:monospace; font-size:0.84rem;">
+          <div>Local Camera Frame: <strong id="s7-cam-coords" style="color:var(--cyan)">(3.2, 1.8)</strong></div>
+          <div>Transformation Matrix: <strong id="s7-trans-mat" style="color:var(--accent)">R(&theta;)</strong></div>
+          <div>Global World Map: <strong id="s7-world-coords" style="color:var(--yellow)">(2.1, 4.4)</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8 -->
+    <section id="s8">
+      <div class="section-label">Section 8 <span class="app-tag">&#9881;&#65039; Composition &amp; Modern AI
+          Bridge</span></div>
+      <h2>The Transformation Pipeline: Chaining Matrices &amp; The AI Bridge</h2>
+      <p class="explain">
+        Complex graphics and robotic systems never apply just one matrix &mdash; they chain multiple transformations
+        together:
+        <strong>Object &rarr; Scale (M&#8321;) &rarr; Rotate (M&#8322;) &rarr; Camera View (M&#8323;)</strong>.
+        Because matrix multiplication is associative, the entire graphics pipeline collapses into a single composite
+        matrix:
+        <strong>M_composite = M&#8323; &middot; M&#8322; &middot; M&#8321;</strong>.
+      </p>
+
+      <div class="pipeline-stages">
+        <div class="pipe-step" id="stage-1">
+          <div class="p-title">1. Local Scale (M&#8321;)</div>
+          <div class="p-mat" id="p1-val">[ 1.5 , 0 ; 0 , 0.8 ]</div>
+        </div>
+        <div class="pipe-arr">&rarr;</div>
+        <div class="pipe-step" id="stage-2">
+          <div class="p-title">2. World Rotation (M&#8322;)</div>
+          <div class="p-mat" id="p2-val">R( 45&deg; )</div>
+        </div>
+        <div class="pipe-arr">&rarr;</div>
+        <div class="pipe-step" id="stage-3">
+          <div class="p-title">3. View Shear / Slant (M&#8323;)</div>
+          <div class="p-mat" id="p3-val">Shear( 0.4 )</div>
+        </div>
+        <div class="pipe-arr">=</div>
+        <div class="pipe-step active" id="stage-all">
+          <div class="p-title">Composite M = M&#8323;&middot;M&#8322;&middot;M&#8321;</div>
+          <div class="p-mat" id="pall-val">Single Combined Matrix</div>
+        </div>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="c8" height="420"></canvas>
+      </div>
+      <div class="controls">
+        <button class="preset" id="pipe-play">&#9654; Play Full Pipeline</button>
+        <button class="preset" id="pipe-reset">Reset to Local</button>
+        <div class="ctrl-group" style="margin-left:auto;">
+          <label>Pipeline Stage Progress</label>
+          <input type="range" id="pipe-progress" min="0" max="3" step="0.01" value="0">
+          <span class="val-badge" id="pipe-prog-val">0.0</span>
+        </div>
+      </div>
+
+      <div style="margin-top: 2.5rem;">
+        <h3 style="font-size:1.25rem; font-weight:800; margin-bottom:0.75rem;">
+          The Master Bridge: How Linear Transformations Power Advanced AI &amp; Engineering
+        </h3>
+        <p style="font-size:0.92rem; color:var(--muted); line-height:1.6;">
+          Notice how linear transformations unify seemingly disparate fields. Instead of memorizing isolated formulas,
+          recognize them as spatial manipulation:
+        </p>
+
+        <div class="bridge-grid">
+          <div class="bridge-card">
+            <div class="bridge-icon">&#127918;</div>
+            <h4>Computer Graphics</h4>
+            <p>Every 3D mesh is rotated, scaled, and projected onto screen pixels via 4&times;4 homogeneous
+              transformation matrices running parallel on GPUs.</p>
+            <div class="bridge-math">p&prime; = M_proj &middot; M_view &middot; M_model &middot; p</div>
+          </div>
+
+          <div class="bridge-card">
+            <div class="bridge-icon">&#129302;</div>
+            <h4>Robotics &amp; Kinematics</h4>
+            <p>Forward kinematics chains transformations from base to gripper. The Jacobian matrix maps joint velocities
+              to spatial tool velocities.</p>
+            <div class="bridge-math">T_world = T_base &middot; T_arm &middot; T_gripper</div>
+          </div>
+
+          <div class="bridge-card">
+            <div class="bridge-icon">&#128065;&#65039;</div>
+            <h4>Computer Vision</h4>
+            <p>Homography matrices match planar scenes between cameras. Camera calibration matrices map 3D optical rays
+              into digital sensor pixels.</p>
+            <div class="bridge-math">x_pixel = K &middot; [R | t] &middot; X_world</div>
+          </div>
+
+          <div class="bridge-card">
+            <div class="bridge-icon">&#128202;</div>
+            <h4>PCA &amp; SVD (Data Science)</h4>
+            <p>Principal Component Analysis rotates your dataset onto a new orthogonal basis aligned with directions of
+              maximum variance.</p>
+            <div class="bridge-math">M = U &middot; &Sigma; &middot; V&#7488; (Rotation &bull; Scale &bull; Rotation)
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    'use strict';
+    const $i = id => document.getElementById(id);
+    const TWO_PI = Math.PI * 2;
+    const CELL = 44;
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function cssv(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+    function arrow(ctx, x1, y1, x2, y2, color, lw, hl) {
+      lw = lw || 2.5; hl = hl || 12;
+      const ang = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - hl * Math.cos(ang - 0.42), y2 - hl * Math.sin(ang - 0.42));
+      ctx.lineTo(x2 - hl * Math.cos(ang + 0.42), y2 - hl * Math.sin(ang + 0.42));
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawGrid(ctx, W, H, ox, oy, cell) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.strokeStyle = cssv('--grid') || '#202738';
+      ctx.lineWidth = 1;
+      for (let x = ox % cell; x < W; x += cell) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = oy % cell; y < H; y += cell) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      ctx.strokeStyle = cssv('--axis') || '#3d4a66';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(W, oy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ox, 0); ctx.lineTo(ox, H); ctx.stroke();
+      ctx.fillStyle = cssv('--muted') || '#8b95b5';
+      ctx.font = '10px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (let i = -14; i <= 14; i++) {
+        if (!i) continue;
+        const px = ox + i * cell;
+        if (px > 10 && px < W - 10) ctx.fillText(i, px, oy + 4);
+      }
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      for (let i = -14; i <= 14; i++) {
+        if (!i) continue;
+        const py = oy - i * cell;
+        if (py > 10 && py < H - 10) ctx.fillText(i, ox - 6, py);
+      }
+    }
+
+    function labelV(ctx, px, py, txt, color) {
+      ctx.save();
+      ctx.font = 'bold 11px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(txt).width;
+      ctx.fillStyle = 'rgba(13, 16, 23, 0.75)';
+      ctx.fillRect(px - tw / 2 - 5, py - 9, tw + 10, 18);
+      ctx.fillStyle = color;
+      ctx.fillText(txt, px, py);
+      ctx.restore();
+    }
+
+    class Dragger {
+      constructor(cv, pts, cb) {
+        this.cv = cv; this.pts = pts; this.cb = cb; this.drag = null;
+        cv.addEventListener('mousedown', e => this._dn(e));
+        cv.addEventListener('mousemove', e => this._mv(e));
+        window.addEventListener('mouseup', () => { this.drag = null; });
+        cv.addEventListener('touchstart', e => this._dn(e), { passive: false });
+        cv.addEventListener('touchmove', e => this._mv(e), { passive: false });
+        window.addEventListener('touchend', () => { this.drag = null; });
+      }
+      _cp(e) {
+        const r = this.cv.getBoundingClientRect();
+        const sx = this.cv.width / r.width, sy = this.cv.height / r.height;
+        const cl = e.touches ? e.touches[0] : e;
+        return { x: (cl.clientX - r.left) * sx, y: (cl.clientY - r.top) * sy };
+      }
+      _dn(e) {
+        const { x, y } = this._cp(e);
+        for (const p of this.pts) {
+          const dx = x - p.px, dy = y - p.py;
+          if (Math.sqrt(dx * dx + dy * dy) < 28) {
+            this.drag = p;
+            if (e.cancelable) e.preventDefault();
+            return;
+          }
+        }
+      }
+      _mv(e) {
+        if (!this.drag) return;
+        if (e.cancelable) e.preventDefault();
+        const { x, y } = this._cp(e);
+        this.drag.px = x; this.drag.py = y;
+        this.cb();
+      }
+    }
+
+    /* Theme toggle */
+    let dark = true;
+    $i('theme-btn').addEventListener('click', () => {
+      dark = !dark;
+      document.body.dataset.theme = dark ? 'dark' : 'light';
+      $i('theme-btn').textContent = dark ? '\u2600 Light' : '\u263E Dark';
+      if (window.s1Draw) s1Draw();
+      if (window.s2Draw) s2Draw();
+      if (window.s3Draw) s3Draw();
+      if (window.s5Draw) s5Draw();
+      if (window.s6Draw) s6Draw();
+      if (window.s7Draw) s7Draw();
+      if (window.s8Draw) s8Draw();
+    });
+
+    /* ====== S1: Vectors as Basis Vectors ====== */
+    (function () {
+      const cv = $i('c1'); let W, H, ox, oy, cell;
+      function rsz() {
+        const r = cv.parentElement.getBoundingClientRect();
+        W = cv.width = r.width * devicePixelRatio;
+        H = cv.height = 420 * devicePixelRatio;
+        cv.style.height = '420px';
+        ox = W / 2; oy = H / 2;
+        cell = CELL * devicePixelRatio;
+      }
+      function draw() {
+        rsz();
+        const ctx = cv.getContext('2d');
+        drawGrid(ctx, W, H, ox, oy, cell);
+        const x = parseFloat($i('s1x').value), y = parseFloat($i('s1y').value);
+        $i('s1x-val').textContent = x.toFixed(1);
+        $i('s1y-val').textContent = y.toFixed(1);
+        $i('s1-formula').textContent = 'v = ' + x.toFixed(1) + '\u00b7\u00ee + ' + y.toFixed(1) + '\u0135 = (' + x.toFixed(1) + ', ' + y.toFixed(1) + ')';
+
+        // Unit basis
+        arrow(ctx, ox, oy, ox + cell, oy, '#ff6b6b', 2.5 * devicePixelRatio, 11 * devicePixelRatio);
+        labelV(ctx, ox + cell + 16 * devicePixelRatio, oy - 12 * devicePixelRatio, '\u00ee [1,0]', '#ff6b6b');
+        arrow(ctx, ox, oy, ox, oy - cell, '#4dabf7', 2.5 * devicePixelRatio, 11 * devicePixelRatio);
+        labelV(ctx, ox - 26 * devicePixelRatio, oy - cell, '\u0135 [0,1]', '#4dabf7');
+
+        // Dashed components
+        if (Math.abs(x) > 0.05) {
+          ctx.save();
+          ctx.setLineDash([6 * devicePixelRatio, 4 * devicePixelRatio]);
+          ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 2 * devicePixelRatio; ctx.globalAlpha = 0.8;
+          ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + x * cell, oy); ctx.stroke();
+          ctx.restore();
+          labelV(ctx, ox + x * cell / 2, oy + 18 * devicePixelRatio, x.toFixed(1) + '\u00b7\u00ee', '#ff6b6b');
+        }
+        if (Math.abs(y) > 0.05) {
+          ctx.save();
+          ctx.setLineDash([6 * devicePixelRatio, 4 * devicePixelRatio]);
+          ctx.strokeStyle = '#4dabf7'; ctx.lineWidth = 2 * devicePixelRatio; ctx.globalAlpha = 0.8;
+          ctx.beginPath(); ctx.moveTo(ox + x * cell, oy); ctx.lineTo(ox + x * cell, oy - y * cell); ctx.stroke();
+          ctx.restore();
+          labelV(ctx, ox + x * cell + 30 * devicePixelRatio, oy - y * cell / 2, y.toFixed(1) + '\u00b7\u0135', '#4dabf7');
+        }
+
+        // Resultant vector
+        arrow(ctx, ox, oy, ox + x * cell, oy - y * cell, '#cc5de8', 3.5 * devicePixelRatio, 14 * devicePixelRatio);
+        labelV(ctx, ox + x * cell + 30 * devicePixelRatio, oy - y * cell - 12 * devicePixelRatio, 'v(' + x.toFixed(1) + ',' + y.toFixed(1) + ')', '#cc5de8');
+      }
+      window.s1Draw = draw;
+      $i('s1x').addEventListener('input', draw);
+      $i('s1y').addEventListener('input', draw);
+      window.addEventListener('resize', draw);
+      draw();
+    })();
+
+    /* ====== S2: Custom Basis & Vehicle Navigation ====== */
+    (function () {
+      const cv = $i('c2'); let W, H, ox, oy, cell;
+      let showSc = false, showGrid = false;
+      let b1 = { x: 2.2, y: 0.8 }, b2 = { x: -0.8, y: 1.8 }, dp1, dp2;
+      function w2p(wx, wy) { return { px: ox + wx * cell, py: oy - wy * cell }; }
+      function p2w(px, py) { return { x: (px - ox) / cell, y: -(py - oy) / cell }; }
+      function rsz() {
+        const r = cv.parentElement.getBoundingClientRect();
+        W = cv.width = r.width * devicePixelRatio;
+        H = cv.height = 420 * devicePixelRatio;
+        cv.style.height = '420px';
+        ox = W / 2; oy = H / 2;
+        cell = CELL * devicePixelRatio;
+        const p1 = w2p(b1.x, b1.y), p2 = w2p(b2.x, b2.y);
+        dp1 = { px: p1.px, py: p1.py };
+        dp2 = { px: p2.px, py: p2.py };
+      }
+      function draw() {
+        b1 = p2w(dp1.px, dp1.py);
+        b2 = p2w(dp2.px, dp2.py);
+        const ctx = cv.getContext('2d');
+        drawGrid(ctx, W, H, ox, oy, cell);
+
+        // Custom skewed vehicle grid lines
+        if (showGrid) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 146, 43, 0.18)';
+          ctx.lineWidth = 1 * devicePixelRatio;
+          for (let i = -6; i <= 6; i++) {
+            const start = w2p(i * b1.x - 6 * b2.x, i * b1.y - 6 * b2.y);
+            const end = w2p(i * b1.x + 6 * b2.x, i * b1.y + 6 * b2.y);
+            ctx.beginPath(); ctx.moveTo(start.px, start.py); ctx.lineTo(end.px, end.py); ctx.stroke();
+          }
+          ctx.strokeStyle = 'rgba(81, 207, 102, 0.18)';
+          for (let j = -6; j <= 6; j++) {
+            const start = w2p(-6 * b1.x + j * b2.x, -6 * b1.y + j * b2.y);
+            const end = w2p(6 * b1.x + j * b2.x, 6 * b1.y + j * b2.y);
+            ctx.beginPath(); ctx.moveTo(start.px, start.py); ctx.lineTo(end.px, end.py); ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        if (showSc) {
+          ctx.fillStyle = 'rgba(56, 217, 169, 0.2)';
+          for (let i = 0; i < 700; i++) {
+            const sa = (Math.random() - 0.5) * 5, sb = (Math.random() - 0.5) * 5;
+            const { px, py } = w2p(sa * b1.x + sb * b2.x, sa * b1.y + sb * b2.y);
+            ctx.beginPath(); ctx.arc(px, py, 2.5 * devicePixelRatio, 0, TWO_PI); ctx.fill();
+          }
+        }
+
+        const a = parseFloat($i('s2a').value), b = parseFloat($i('s2b').value);
+        $i('s2a-val').textContent = a.toFixed(2);
+        $i('s2b-val').textContent = b.toFixed(2);
+
+        // Vehicle icon at origin facing b1
+        const headAng = Math.atan2(b1.y, b1.x);
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.rotate(-headAng);
+        ctx.fillStyle = 'rgba(255, 146, 43, 0.3)';
+        ctx.strokeStyle = '#ff922b';
+        ctx.lineWidth = 2 * devicePixelRatio;
+        ctx.beginPath();
+        ctx.moveTo(18 * devicePixelRatio, 0);
+        ctx.lineTo(-12 * devicePixelRatio, -10 * devicePixelRatio);
+        ctx.lineTo(-6 * devicePixelRatio, 0);
+        ctx.lineTo(-12 * devicePixelRatio, 10 * devicePixelRatio);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+
+        // Arrows for b1 and b2
+        arrow(ctx, ox, oy, dp1.px, dp1.py, '#ff922b', 3 * devicePixelRatio, 12 * devicePixelRatio);
+        labelV(ctx, dp1.px + 28 * devicePixelRatio, dp1.py, 'b\u2081 Forward (' + b1.x.toFixed(1) + ',' + b1.y.toFixed(1) + ')', '#ff922b');
+
+        arrow(ctx, ox, oy, dp2.px, dp2.py, '#51cf66', 3 * devicePixelRatio, 12 * devicePixelRatio);
+        labelV(ctx, dp2.px + 24 * devicePixelRatio, dp2.py, 'b\u2082 Port (' + b2.x.toFixed(1) + ',' + b2.y.toFixed(1) + ')', '#51cf66');
+
+        // Drag handle rings
+        [dp1, dp2].forEach((dp, i) => {
+          ctx.save();
+          ctx.beginPath(); ctx.arc(dp.px, dp.py, 12 * devicePixelRatio, 0, TWO_PI);
+          ctx.fillStyle = i === 0 ? 'rgba(255,146,43,0.3)' : 'rgba(81,207,102,0.3)';
+          ctx.strokeStyle = i === 0 ? '#ff922b' : '#51cf66';
+          ctx.lineWidth = 2 * devicePixelRatio;
+          ctx.fill(); ctx.stroke();
+          ctx.restore();
+        });
+
+        // Combination
+        const rp1 = w2p(a * b1.x, a * b1.y);
+        const res = w2p(a * b1.x + b * b2.x, a * b1.y + b * b2.y);
+        if (Math.abs(a) > 0.02) {
+          ctx.save();
+          ctx.setLineDash([7 * devicePixelRatio, 4 * devicePixelRatio]);
+          arrow(ctx, ox, oy, rp1.px, rp1.py, '#ff922b', 2 * devicePixelRatio, 10 * devicePixelRatio);
+          ctx.restore();
+        }
+        if (Math.abs(b) > 0.02) {
+          ctx.save();
+          ctx.setLineDash([7 * devicePixelRatio, 4 * devicePixelRatio]);
+          arrow(ctx, rp1.px, rp1.py, res.px, res.py, '#51cf66', 2 * devicePixelRatio, 10 * devicePixelRatio);
+          ctx.restore();
+        }
+
+        arrow(ctx, ox, oy, res.px, res.py, '#cc5de8', 3.5 * devicePixelRatio, 14 * devicePixelRatio);
+        const wx = (a * b1.x + b * b2.x).toFixed(2);
+        const wy = (a * b1.y + b * b2.y).toFixed(2);
+        labelV(ctx, res.px + 30 * devicePixelRatio, res.py - 14 * devicePixelRatio, 'World Position: (' + wx + ', ' + wy + ')', '#cc5de8');
+
+        const cross = b1.x * b2.y - b1.y * b2.x;
+        const info = $i('s2-info');
+        if (Math.abs(cross) < 0.35) {
+          info.innerHTML = '<span class="tag tag-dep">Degenerate Frame</span> Det = ' + cross.toFixed(2) + ' &mdash; Heading &amp; lateral are collinear! Vehicle loses a spatial dimension.';
+        } else {
+          info.innerHTML = '<span class="tag tag-indep">Valid Basis</span> Det = ' + cross.toFixed(2) + ' &mdash; Vehicle command (' + a.toFixed(1) + ' fwd, ' + b.toFixed(1) + ' lat) &rarr; World map (' + wx + ', ' + wy + ').';
+        }
+      }
+
+      function init() {
+        rsz();
+        new Dragger(cv, [dp1, dp2], draw);
+        draw();
+      }
+      $i('s2a').addEventListener('input', draw);
+      $i('s2b').addEventListener('input', draw);
+      $i('s2-grid-btn').addEventListener('click', () => {
+        showGrid = !showGrid;
+        $i('s2-grid-btn').classList.toggle('on', showGrid);
+        draw();
+      });
+      $i('s2-scatter-btn').addEventListener('click', () => {
+        showSc = !showSc;
+        $i('s2-scatter-btn').classList.toggle('on', showSc);
+        draw();
+      });
+      window.s2Draw = draw;
+      window.addEventListener('resize', () => { rsz(); draw(); });
+      init();
+    })();
+
+    /* ====== S3: Span & Independence / Robot Degrees of Freedom ====== */
+    (function () {
+      const cv = $i('c3'); let W, H, ox, oy, cell;
+      let v1 = { x: 2.8, y: 1.2 }, v2 = { x: -1.2, y: 2.4 }, dp1, dp2;
+      function w2p(wx, wy) { return { px: ox + wx * cell, py: oy - wy * cell }; }
+      function p2w(px, py) { return { x: (px - ox) / cell, y: -(py - oy) / cell }; }
+      function rsz() {
+        const r = cv.parentElement.getBoundingClientRect();
+        W = cv.width = r.width * devicePixelRatio;
+        H = cv.height = 420 * devicePixelRatio;
+        cv.style.height = '420px';
+        ox = W / 2; oy = H / 2;
+        cell = CELL * devicePixelRatio;
+        const p1 = w2p(v1.x, v1.y), p2 = w2p(v2.x, v2.y);
+        dp1 = { px: p1.px, py: p1.py };
+        dp2 = { px: p2.px, py: p2.py };
+      }
+      function draw() {
+        v1 = p2w(dp1.px, dp1.py);
+        v2 = p2w(dp2.px, dp2.py);
+        const ctx = cv.getContext('2d');
+        const det = v1.x * v2.y - v1.y * v2.x;
+        const isSingular = Math.abs(det) < 0.38;
+
+        ctx.clearRect(0, 0, W, H);
+        if (!isSingular) {
+          // 2D Full Workspace Shading
+          const g = ctx.createRadialGradient(ox, oy, 10, ox, oy, Math.max(W, H) * 0.7);
+          g.addColorStop(0, 'rgba(124, 106, 247, 0.22)');
+          g.addColorStop(1, 'rgba(124, 106, 247, 0.02)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+        } else {
+          // Collapsed 1D Singular Line
+          const mag = Math.sqrt(v1.x * v1.x + v1.y * v1.y) || 1;
+          const dx = (v1.x / mag) * Math.max(W, H) * 2;
+          const dy = (v1.y / mag) * Math.max(W, H) * 2;
+          ctx.save();
+          ctx.strokeStyle = 'rgba(255, 107, 107, 0.65)';
+          ctx.lineWidth = 7 * devicePixelRatio;
+          ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(ox - dx, oy + dy); ctx.lineTo(ox + dx, oy - dy); ctx.stroke();
+          ctx.restore();
+        }
+
+        drawGrid(ctx, W, H, ox, oy, cell);
+
+        // Draw robot base hub
+        ctx.save();
+        ctx.beginPath(); ctx.arc(ox, oy, 8 * devicePixelRatio, 0, TWO_PI);
+        ctx.fillStyle = '#7c6af7'; ctx.fill();
+        ctx.restore();
+
+        arrow(ctx, ox, oy, dp1.px, dp1.py, '#ff6b6b', 3.5 * devicePixelRatio, 14 * devicePixelRatio);
+        labelV(ctx, dp1.px + 28 * devicePixelRatio, dp1.py, 'Joint 1 (' + v1.x.toFixed(1) + ',' + v1.y.toFixed(1) + ')', '#ff6b6b');
+
+        arrow(ctx, ox, oy, dp2.px, dp2.py, '#4dabf7', 3.5 * devicePixelRatio, 14 * devicePixelRatio);
+        labelV(ctx, dp2.px + 28 * devicePixelRatio, dp2.py, 'Joint 2 (' + v2.x.toFixed(1) + ',' + v2.y.toFixed(1) + ')', '#4dabf7');
+
+        [dp1, dp2].forEach((dp, i) => {
+          ctx.save();
+          ctx.beginPath(); ctx.arc(dp.px, dp.py, 12 * devicePixelRatio, 0, TWO_PI);
+          ctx.fillStyle = i === 0 ? 'rgba(255, 107, 107, 0.35)' : 'rgba(77, 171, 247, 0.35)';
+          ctx.strokeStyle = i === 0 ? '#ff6b6b' : '#4dabf7';
+          ctx.lineWidth = 2 * devicePixelRatio;
+          ctx.fill(); ctx.stroke();
+          ctx.restore();
+        });
+
+        const info = $i('s3-info');
+        if (isSingular) {
+          info.innerHTML = '<span class="tag tag-dep">Kinematic Singularity (1 DOF)</span> Det = ' + det.toFixed(2) + ' &mdash; Actuators are collinear! End-effector is jammed along a 1D line.';
+        } else {
+          info.innerHTML = '<span class="tag tag-indep">Full Workspace (2 DOF)</span> Det = ' + det.toFixed(2) + ' &mdash; Actuators span full 2D space &mdash; robot can reach any (x, y) target.';
+        }
+      }
+
+      function init() {
+        rsz();
+        new Dragger(cv, [dp1, dp2], draw);
+        draw();
+      }
+      $i('s3-btn-indep').addEventListener('click', () => {
+        v1 = { x: 2.8, y: 0.8 }; v2 = { x: -0.6, y: 2.6 };
+        const p1 = w2p(v1.x, v1.y), p2 = w2p(v2.x, v2.y);
+        dp1.px = p1.px; dp1.py = p1.py; dp2.px = p2.px; dp2.py = p2.py;
+        draw();
+      });
+      $i('s3-btn-sing').addEventListener('click', () => {
+        v1 = { x: 2.5, y: 1.5 }; v2 = { x: -2.5, y: -1.5 };
+        const p1 = w2p(v1.x, v1.y), p2 = w2p(v2.x, v2.y);
+        dp1.px = p1.px; dp1.py = p1.py; dp2.px = p2.px; dp2.py = p2.py;
+        draw();
+      });
+      $i('s3-btn-ortho').addEventListener('click', () => {
+        v1 = { x: 3.0, y: 0 }; v2 = { x: 0, y: 3.0 };
+        const p1 = w2p(v1.x, v1.y), p2 = w2p(v2.x, v2.y);
+        dp1.px = p1.px; dp1.py = p1.py; dp2.px = p2.px; dp2.py = p2.py;
+        draw();
+      });
+
+      window.s3Draw = draw;
+      window.addEventListener('resize', () => { rsz(); draw(); });
+      init();
+    })();
+
+    /* ====== S4: 3D Span & Camera Geometry ====== */
+    (function () {
+      const cont = $i('canvas3d');
+      if (typeof THREE === 'undefined') {
+        cont.innerHTML = '<p style="padding:2rem;color:var(--muted)">Three.js loading...</p>';
+        return;
+      }
+      const ren = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      ren.setPixelRatio(devicePixelRatio);
+      ren.setClearColor(0, 0);
+      cont.appendChild(ren.domElement);
+
+      const scene = new THREE.Scene();
+      const cam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+      function rz3() {
+        const r = cont.getBoundingClientRect();
+        ren.setSize(r.width, r.height);
+        cam.aspect = r.width / r.height;
+        cam.updateProjectionMatrix();
+      }
+      rz3();
+      window.addEventListener('resize', rz3);
+
+      scene.add(new THREE.AxesHelper(4.5));
+      scene.add(new THREE.GridHelper(9, 9, 0x3d4a66, 0x202738));
+      scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+      const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+      dl.position.set(6, 12, 6);
+      scene.add(dl);
+
+      function mkArr(dir, len, color) {
+        const g = new THREE.Group();
+        const mat = new THREE.MeshLambertMaterial({ color });
+        const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, len, 12), mat);
+        const hd = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.35, 12), mat);
+        sh.position.y = len / 2;
+        hd.position.y = len + 0.17;
+        g.add(sh); g.add(hd);
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+        g.setRotationFromQuaternion(q);
+        return g;
+      }
+
+      const v1d = new THREE.Vector3(2.5, 1.2, 0).normalize();
+      const v2d = new THREE.Vector3(0, 1.4, 2.2).normalize();
+      const v3d = new THREE.Vector3(1.2, 2.8, 1.2).normalize();
+
+      scene.add(mkArr(v1d, 3, 0xff6b6b));
+      scene.add(mkArr(v2d, 3, 0x4dabf7));
+
+      function mkPlane(v1, v2) {
+        const verts = [], idx = [], N = 12;
+        for (let i = 0; i <= N; i++) {
+          for (let j = 0; j <= N; j++) {
+            const a = (i / N - 0.5) * 8, b = (j / N - 0.5) * 8;
+            const p = v1.clone().multiplyScalar(a).add(v2.clone().multiplyScalar(b));
+            verts.push(p.x, p.y, p.z);
+          }
+        }
+        for (let i = 0; i < N; i++) {
+          for (let j = 0; j < N; j++) {
+            const a = i * (N + 1) + j;
+            idx.push(a, a + 1, a + N + 2, a, a + N + 2, a + N + 1);
+          }
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+        geo.setIndex(idx);
+        geo.computeVertexNormals();
+        return new THREE.Mesh(geo, new THREE.MeshLambertMaterial({
+          color: 0x7c6af7, transparent: true, opacity: 0.25, side: THREE.DoubleSide
+        }));
+      }
+
+      const plane = mkPlane(v1d, v2d);
+      scene.add(plane);
+
+      let a3 = null, cloud = null, v3On = false;
+      $i('v3-toggle').addEventListener('click', () => {
+        v3On = !v3On;
+        $i('v3-toggle').classList.toggle('on', v3On);
+        $i('v3-toggle').textContent = v3On ? '\u2212 Remove 3rd Actuator' : '+ Add 3rd Independent Actuator (3 DOF)';
+        if (v3On) {
+          a3 = mkArr(v3d, 2.6, 0x51cf66);
+          scene.add(a3);
+          const g2 = new THREE.BufferGeometry();
+          const pos = [];
+          for (let i = 0; i < 600; i++) {
+            pos.push((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8);
+          }
+          g2.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+          cloud = new THREE.Points(g2, new THREE.PointsMaterial({ color: 0x38d9a9, size: 0.1, transparent: true, opacity: 0.6 }));
+          scene.add(cloud);
+          plane.material.opacity = 0.08;
+          $i('s4-info').innerHTML = '<span class="tag tag-indep">Full 3D Volumetric Reach</span> 3 independent actuators unlock all 3 spatial dimensions &mdash; the end-effector can move anywhere in 3D volume!';
+        } else {
+          if (a3) { scene.remove(a3); a3 = null; }
+          if (cloud) { scene.remove(cloud); cloud = null; }
+          plane.material.opacity = 0.25;
+          $i('s4-info').innerHTML = '<span class="tag tag-info">Planar Reach</span> 2 actuators span a flat 2D slice through 3D space.';
+        }
+      });
+
+      let th = 0.8, ph = 0.55, rad = 9, isDrag = false, lx = 0, ly = 0;
+      function updCam() {
+        cam.position.set(
+          rad * Math.sin(ph) * Math.sin(th),
+          rad * Math.cos(ph),
+          rad * Math.sin(ph) * Math.cos(th)
+        );
+        cam.lookAt(0, 0, 0);
+      }
+      updCam();
+
+      ren.domElement.addEventListener('mousedown', e => { isDrag = true; lx = e.clientX; ly = e.clientY; });
+      window.addEventListener('mouseup', () => { isDrag = false; });
+      ren.domElement.addEventListener('mousemove', e => {
+        if (!isDrag) return;
+        th -= (e.clientX - lx) * 0.008;
+        ph = Math.max(0.1, Math.min(Math.PI - 0.1, ph - (e.clientY - ly) * 0.008));
+        lx = e.clientX; ly = e.clientY;
+        updCam();
+      });
+      ren.domElement.addEventListener('touchstart', e => {
+        isDrag = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+      }, { passive: true });
+      ren.domElement.addEventListener('touchmove', e => {
+        if (!isDrag) return;
+        th -= (e.touches[0].clientX - lx) * 0.008;
+        ph = Math.max(0.1, Math.min(Math.PI - 0.1, ph - (e.touches[0].clientY - ly) * 0.008));
+        lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+        updCam();
+      }, { passive: true });
+      window.addEventListener('touchend', () => { isDrag = false; });
+
+      (function loop() {
+        requestAnimationFrame(loop);
+        ren.render(scene, cam);
+      })();
+    })();
+
+    /* ====== S5: 2D Graphics Matrix Engine ====== */
+    (function () {
+      const cv = $i('c5'); let W, H, ox, oy, cell;
+      let animT = 0, animDir = 1, animating = false, animStart = null;
+      const DUR = 650;
+      let vx = 2.0, vy = 1.0, dvp = null;
+
+      function getM() {
+        return {
+          a: parseFloat($i('ma').value) || 0,
+          b: parseFloat($i('mb').value) || 0,
+          c: parseFloat($i('mc').value) || 0,
+          d: parseFloat($i('md').value) || 0
+        };
+      }
+      function rsz() {
+        const r = cv.parentElement.getBoundingClientRect();
+        W = cv.width = r.width * devicePixelRatio;
+        H = cv.height = 480 * devicePixelRatio;
+        cv.style.height = '480px';
+        ox = W / 2; oy = H / 2;
+        cell = CELL * devicePixelRatio;
+        if (!dvp) dvp = { px: ox + vx * cell, py: oy - vy * cell };
+      }
+      function xf(wx, wy, t, m) {
+        return {
+          x: lerp(wx, m.a * wx + m.b * wy, t),
+          y: lerp(wy, m.c * wx + m.d * wy, t)
+        };
+      }
+
+      // Model geometry: A stylish game spaceship
+      const shipVerts = [
+        { x: 1.8, y: 0 },
+        { x: -1.0, y: 0.9 },
+        { x: -0.5, y: 0 },
+        { x: -1.0, y: -0.9 }
+      ];
+
+      function draw(t) {
+        if (t === undefined) t = animT;
+        const m = getM();
+        const ctx = cv.getContext('2d');
+        ctx.clearRect(0, 0, W, H);
+        const RG = 9;
+
+        // Transformed grid lines
+        ctx.strokeStyle = cssv('--grid') || '#202738';
+        ctx.lineWidth = 1 * devicePixelRatio;
+        for (let i = -RG; i <= RG; i++) {
+          const p0 = xf(i, -RG, t, m), p1 = xf(i, RG, t, m);
+          ctx.beginPath();
+          ctx.moveTo(ox + p0.x * cell, oy - p0.y * cell);
+          ctx.lineTo(ox + p1.x * cell, oy - p1.y * cell);
+          ctx.stroke();
+        }
+        for (let j = -RG; j <= RG; j++) {
+          const p0 = xf(-RG, j, t, m), p1 = xf(RG, j, t, m);
+          ctx.beginPath();
+          ctx.moveTo(ox + p0.x * cell, oy - p0.y * cell);
+          ctx.lineTo(ox + p1.x * cell, oy - p1.y * cell);
+          ctx.stroke();
+        }
+
+        // Transformed axes
+        ctx.strokeStyle = cssv('--axis') || '#3d4a66';
+        ctx.lineWidth = 2 * devicePixelRatio;
+        const ax0 = xf(-RG, 0, t, m), ax1 = xf(RG, 0, t, m);
+        ctx.beginPath(); ctx.moveTo(ox + ax0.x * cell, oy - ax0.y * cell); ctx.lineTo(ox + ax1.x * cell, oy - ax1.y * cell); ctx.stroke();
+        const ay0 = xf(0, -RG, t, m), ay1 = xf(0, RG, t, m);
+        ctx.beginPath(); ctx.moveTo(ox + ay0.x * cell, oy - ay0.y * cell); ctx.lineTo(ox + ay1.x * cell, oy - ay1.y * cell); ctx.stroke();
+
+        // Transformed basis vectors
+        const ei = xf(1, 0, t, m);
+        arrow(ctx, ox, oy, ox + ei.x * cell, oy - ei.y * cell, '#ff6b6b', 3 * devicePixelRatio, 14 * devicePixelRatio);
+        labelV(ctx, ox + ei.x * cell + 26 * devicePixelRatio, oy - ei.y * cell - 12 * devicePixelRatio, 'M\u00ee (' + (lerp(1, m.a, t)).toFixed(1) + ',' + (lerp(0, m.c, t)).toFixed(1) + ')', '#ff6b6b');
+
+        const ej = xf(0, 1, t, m);
+        arrow(ctx, ox, oy, ox + ej.x * cell, oy - ej.y * cell, '#4dabf7', 3 * devicePixelRatio, 14 * devicePixelRatio);
+        labelV(ctx, ox + ej.x * cell + 26 * devicePixelRatio, oy - ej.y * cell - 12 * devicePixelRatio, 'M\u0135 (' + (lerp(0, m.b, t)).toFixed(1) + ',' + (lerp(1, m.d, t)).toFixed(1) + ')', '#4dabf7');
+
+        // Transformed game craft
+        ctx.save();
+        ctx.beginPath();
+        shipVerts.forEach((v, idx) => {
+          const tp = xf(v.x, v.y, t, m);
+          const px = ox + tp.x * cell, py = oy - tp.y * cell;
+          if (idx === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(252, 196, 25, 0.28)';
+        ctx.strokeStyle = '#fcc419';
+        ctx.lineWidth = 2.5 * devicePixelRatio;
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+
+        // Draggable test vector v
+        const vt = xf(vx, vy, t, m);
+        const ox2 = ox + vt.x * cell, oy2 = oy - vt.y * cell;
+        if (t < 0.98) {
+          ctx.save();
+          ctx.globalAlpha = 1 - t * 0.7;
+          arrow(ctx, ox, oy, ox + vx * cell, oy - vy * cell, '#cc5de8', 2.5 * devicePixelRatio, 12 * devicePixelRatio);
+          ctx.restore();
+        }
+        arrow(ctx, ox, oy, ox2, oy2, '#fcc419', 3.5 * devicePixelRatio, 14 * devicePixelRatio);
+        labelV(ctx, ox2 + 28 * devicePixelRatio, oy2 - 14 * devicePixelRatio, 'p\' = (' + vt.x.toFixed(1) + ',' + vt.y.toFixed(1) + ')', '#fcc419');
+
+        // Drag handle for v
+        dvp.px = ox + vx * cell; dvp.py = oy - vy * cell;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(dvp.px, dvp.py, 11 * devicePixelRatio, 0, TWO_PI);
+        ctx.fillStyle = 'rgba(204, 93, 232, 0.35)'; ctx.strokeStyle = '#cc5de8';
+        ctx.lineWidth = 2 * devicePixelRatio; ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      function updSteps() {
+        const m = getM(), rx = m.a * vx + m.b * vy, ry = m.c * vx + m.d * vy;
+        const box = $i('transform-steps');
+        box.style.display = 'block';
+        box.innerHTML = '<strong>Graphics Transformation Pipeline:</strong><br>'
+          + 'M &middot; p = [' + m.a.toFixed(1) + '  ' + m.b.toFixed(1) + ' ; ' + m.c.toFixed(1) + '  ' + m.d.toFixed(1) + '] &times; [' + vx.toFixed(1) + ' ; ' + vy.toFixed(1) + ']'
+          + ' = [' + m.a.toFixed(1) + '&times;' + vx.toFixed(1) + ' + ' + m.b.toFixed(1) + '&times;' + vy.toFixed(1) + ' ; '
+          + m.c.toFixed(1) + '&times;' + vx.toFixed(1) + ' + ' + m.d.toFixed(1) + '&times;' + vy.toFixed(1) + ']<br>'
+          + '&rarr; Transformed Screen Vertex: <span style="color:var(--yellow); font-weight:bold;">(' + rx.toFixed(2) + ', ' + ry.toFixed(2) + ')</span>';
+      }
+
+      function startAnim() {
+        animDir = animT < 0.5 ? 1 : -1;
+        animating = true; animStart = null;
+        requestAnimationFrame(af);
+      }
+      function af(ts) {
+        if (!animStart) animStart = ts;
+        const p = Math.min((ts - animStart) / DUR, 1);
+        const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+        animT = animDir === 1 ? e : 1 - e;
+        draw(animT);
+        if (p < 1) requestAnimationFrame(af);
+        else {
+          animT = animDir === 1 ? 1 : 0;
+          animating = false;
+          draw(animT);
+          updSteps();
+        }
+      }
+
+      const presets = [
+        [1, 0, 0, 1],
+        [0, -1, 1, 0],
+        [1, 1.2, 0, 1],
+        [1.8, 0, 0, 1.8],
+        [2, 0, 0, 0.5],
+        [1, 2, 0.5, 1]
+      ];
+      ['p-identity', 'p-rotate', 'p-shear', 'p-scale', 'p-squeeze', 'p-squish'].forEach((id, i) => {
+        $i(id).addEventListener('click', () => {
+          document.querySelectorAll('#s5 .preset').forEach(b => b.classList.remove('active'));
+          $i(id).classList.add('active');
+          const [a, b, c, d] = presets[i];
+          $i('ma').value = a; $i('mb').value = b; $i('mc').value = c; $i('md').value = d;
+          animT = 0; startAnim();
+        });
+      });
+
+      $i('animate-btn').addEventListener('click', () => { if (!animating) startAnim(); });
+      [$i('ma'), $i('mb'), $i('mc'), $i('md')].forEach(el => el.addEventListener('input', () => { animT = 1; draw(1); updSteps(); }));
+
+      function onDrag() {
+        vx = (dvp.px - ox) / cell; vy = -(dvp.py - oy) / cell;
+        draw(animT);
+        if (animT >= 0.98) updSteps();
+      }
+      function init() {
+        rsz();
+        dvp = { px: ox + vx * cell, py: oy - vy * cell };
+        new Dragger(cv, [dvp], onDrag);
+        draw(0);
+      }
+      window.s5Draw = () => draw(animT);
+      window.addEventListener('resize', () => { rsz(); draw(animT); });
+      init();
+    })();
+
+    /* ====== S6: Image Processing & Matrix Deformations ====== */
+    (function () {
+      const cv = $i('c6'); let W, H, ox, oy;
+      function rsz() {
+        const r = cv.parentElement.getBoundingClientRect();
+        W = cv.width = r.width * devicePixelRatio;
+        H = cv.height = 440 * devicePixelRatio;
+        cv.style.height = '440px';
+        ox = W / 2; oy = H / 2;
+      }
+
+      // Draw procedural retro robot / camera test pattern
+      function drawSourcePattern(ctx, sz) {
+        const half = sz / 2;
+        // Outer card
+        ctx.fillStyle = '#1e2638';
+        ctx.strokeStyle = '#38d9a9';
+        ctx.lineWidth = 3 * devicePixelRatio;
+        ctx.fillRect(-half, -half, sz, sz);
+        ctx.strokeRect(-half, -half, sz, sz);
+
+        // Grid checks
+        ctx.strokeStyle = '#2d374d';
+        ctx.lineWidth = 1 * devicePixelRatio;
+        for (let x = -half + 20; x < half; x += 25) {
+          ctx.beginPath(); ctx.moveTo(x, -half); ctx.lineTo(x, half); ctx.stroke();
+        }
+        for (let y = -half + 20; y < half; y += 25) {
+          ctx.beginPath(); ctx.moveTo(-half, y); ctx.lineTo(half, y); ctx.stroke();
+        }
+
+        // Mascot face / geometry
+        ctx.fillStyle = '#7c6af7';
+        ctx.beginPath(); ctx.arc(0, -10 * devicePixelRatio, 36 * devicePixelRatio, 0, TWO_PI); ctx.fill();
+
+        // Eyes
+        ctx.fillStyle = '#38d9a9';
+        ctx.beginPath(); ctx.arc(-14 * devicePixelRatio, -14 * devicePixelRatio, 8 * devicePixelRatio, 0, TWO_PI); ctx.fill();
+        ctx.beginPath(); ctx.arc(14 * devicePixelRatio, -14 * devicePixelRatio, 8 * devicePixelRatio, 0, TWO_PI); ctx.fill();
+
+        // Smiling sensor mouth
+        ctx.strokeStyle = '#fcc419';
+        ctx.lineWidth = 4 * devicePixelRatio;
+        ctx.beginPath();
+        ctx.arc(0, -6 * devicePixelRatio, 18 * devicePixelRatio, 0.2 * Math.PI, 0.8 * Math.PI);
+        ctx.stroke();
+
+        // Label on card
+        ctx.fillStyle = '#e6ebf5';
+        ctx.font = 'bold ' + Math.round(11 * devicePixelRatio) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('VISION SENSOR', 0, 48 * devicePixelRatio);
+      }
+
+      function draw() {
+        rsz();
+        const ctx = cv.getContext('2d');
+        ctx.clearRect(0, 0, W, H);
+
+        // Background reference grid
+        drawGrid(ctx, W, H, ox, oy, 40 * devicePixelRatio);
+
+        const deg = parseFloat($i('s6-rot').value);
+        const rad = deg * Math.PI / 180;
+        const sx = parseFloat($i('s6-sx').value);
+        const sy = parseFloat($i('s6-sy').value);
+        const shx = parseFloat($i('s6-shx').value);
+
+        $i('s6-rot-val').textContent = deg + '\u00b0';
+        $i('s6-sx-val').textContent = sx.toFixed(2);
+        $i('s6-sy-val').textContent = sy.toFixed(2);
+        $i('s6-shx-val').textContent = shx.toFixed(2);
+
+        // Compute composite affine transformation:
+        // M = R(theta) * Shear(shx) * Scale(sx, sy)
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const a = (cos + sin * shx) * sx;
+        const b = (-sin + cos * shx) * sy;
+        const c = sin * sx;
+        const d = cos * sy;
+        const det = a * d - b * c;
+
+        $i('s6-mat-display').textContent = 'M = [ ' + a.toFixed(2) + ' , ' + b.toFixed(2) + ' ; ' + c.toFixed(2) + ' , ' + d.toFixed(2) + ' ] \u2022 det(M) = ' + det.toFixed(2);
+
+        // Render deformed sprite
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.transform(a, c, b, d, 0, 0);
+        drawSourcePattern(ctx, 140 * devicePixelRatio);
+        ctx.restore();
+      }
+
+      $i('s6-rot').addEventListener('input', draw);
+      $i('s6-sx').addEventListener('input', draw);
+      $i('s6-sy').addEventListener('input', draw);
+      $i('s6-shx').addEventListener('input', draw);
+      $i('s6-reset').addEventListener('click', () => {
+        $i('s6-rot').value = 0; $i('s6-sx').value = 1; $i('s6-sy').value = 1; $i('s6-shx').value = 0;
+        draw();
+      });
+      window.s6Draw = draw;
+      window.addEventListener('resize', draw);
+      draw();
+    })();
+
+    /* ====== S7: Camera Frame vs World Frame ====== */
+    (function () {
+      const cv = $i('c7'); let W, H, ox, oy, cell;
+      let camPos = { x: -2.0, y: -1.0 }, targetPos = { x: 2.2, y: 1.8 };
+      let dCam, dTarget;
+
+      function w2p(wx, wy) { return { px: ox + wx * cell, py: oy - wy * cell }; }
+      function p2w(px, py) { return { x: (px - ox) / cell, y: -(py - oy) / cell }; }
+
+      function rsz() {
+        const r = cv.parentElement.getBoundingClientRect();
+        W = cv.width = r.width * devicePixelRatio;
+        H = cv.height = 440 * devicePixelRatio;
+        cv.style.height = '440px';
+        ox = W / 2; oy = H / 2;
+        cell = CELL * devicePixelRatio;
+        const cp = w2p(camPos.x, camPos.y), tp = w2p(targetPos.x, targetPos.y);
+        dCam = { px: cp.px, py: cp.py };
+        dTarget = { px: tp.px, py: tp.py };
+      }
+
+      function draw() {
+        camPos = p2w(dCam.px, dCam.py);
+        targetPos = p2w(dTarget.px, dTarget.py);
+        const ctx = cv.getContext('2d');
+        drawGrid(ctx, W, H, ox, oy, cell);
+
+        const deg = parseFloat($i('s7-cam-ang').value);
+        const rad = deg * Math.PI / 180;
+        $i('s7-cam-ang-val').textContent = deg + '\u00b0';
+
+        // Camera unit vectors in world space
+        const u = { x: Math.cos(rad), y: Math.sin(rad) }; // camera optical forward
+        const v = { x: -Math.sin(rad), y: Math.cos(rad) }; // camera optical left
+
+        // Relative displacement vector in world space: delta = target - cam
+        const dx = targetPos.x - camPos.x;
+        const dy = targetPos.y - camPos.y;
+
+        // Convert to Camera Frame: P_cam = R^T * delta
+        const xCam = u.x * dx + u.y * dy;
+        const yCam = v.x * dx + v.y * dy;
+
+        $i('s7-cam-coords').textContent = '(' + xCam.toFixed(2) + ' fwd, ' + yCam.toFixed(2) + ' lat)';
+        $i('s7-world-coords').textContent = '(' + targetPos.x.toFixed(2) + ', ' + targetPos.y.toFixed(2) + ')';
+        $i('s7-trans-mat').textContent = 'R(' + deg + '\u00b0) = [' + u.x.toFixed(2) + ' , ' + v.x.toFixed(2) + ' ; ' + u.y.toFixed(2) + ' , ' + v.y.toFixed(2) + ']';
+
+        // Draw camera sensor frustum
+        ctx.save();
+        ctx.translate(dCam.px, dCam.py);
+        ctx.rotate(-rad);
+        ctx.fillStyle = 'rgba(34, 184, 207, 0.15)';
+        ctx.strokeStyle = '#22b8cf';
+        ctx.lineWidth = 2 * devicePixelRatio;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(120 * devicePixelRatio, -55 * devicePixelRatio);
+        ctx.lineTo(120 * devicePixelRatio, 55 * devicePixelRatio);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // Camera body icon
+        ctx.fillStyle = '#22b8cf';
+        ctx.fillRect(-15 * devicePixelRatio, -10 * devicePixelRatio, 30 * devicePixelRatio, 20 * devicePixelRatio);
+        ctx.restore();
+
+        // Ray from camera to target
+        ctx.save();
+        ctx.setLineDash([5 * devicePixelRatio, 5 * devicePixelRatio]);
+        ctx.strokeStyle = '#fcc419';
+        ctx.lineWidth = 2 * devicePixelRatio;
+        ctx.beginPath(); ctx.moveTo(dCam.px, dCam.py); ctx.lineTo(dTarget.px, dTarget.py); ctx.stroke();
+        ctx.restore();
+
+        // Target (Pedestrian/Obstacle)
+        ctx.save();
+        ctx.beginPath(); ctx.arc(dTarget.px, dTarget.py, 12 * devicePixelRatio, 0, TWO_PI);
+        ctx.fillStyle = 'rgba(252, 196, 25, 0.4)'; ctx.strokeStyle = '#fcc419';
+        ctx.lineWidth = 3 * devicePixelRatio; ctx.fill(); ctx.stroke();
+        ctx.restore();
+        labelV(ctx, dTarget.px + 28 * devicePixelRatio, dTarget.py - 16 * devicePixelRatio, 'Obstacle', '#fcc419');
+
+        labelV(ctx, dCam.px - 28 * devicePixelRatio, dCam.py - 18 * devicePixelRatio, 'Robot Camera', '#22b8cf');
+      }
+
+      function init() {
+        rsz();
+        new Dragger(cv, [dCam, dTarget], draw);
+        draw();
+      }
+      $i('s7-cam-ang').addEventListener('input', draw);
+      $i('s7-center-btn').addEventListener('click', () => {
+        camPos = { x: -1.5, y: -0.8 }; targetPos = { x: 2.0, y: 1.5 };
+        const cp = w2p(camPos.x, camPos.y), tp = w2p(targetPos.x, targetPos.y);
+        dCam.px = cp.px; dCam.py = cp.py; dTarget.px = tp.px; dTarget.py = tp.py;
+        draw();
+      });
+      window.s7Draw = draw;
+      window.addEventListener('resize', () => { rsz(); draw(); });
+      init();
+    })();
+
+    /* ====== S8: Transformation Pipeline ====== */
+    (function () {
+      const cv = $i('c8'); let W, H, ox, oy, cell;
+
+      function rsz() {
+        const r = cv.parentElement.getBoundingClientRect();
+        W = cv.width = r.width * devicePixelRatio;
+        H = cv.height = 420 * devicePixelRatio;
+        cv.style.height = '420px';
+        ox = W / 2; oy = H / 2;
+        cell = CELL * devicePixelRatio;
+      }
+
+      // Polygon mesh
+      const rawModel = [
+        { x: -1, y: -1 },
+        { x: 1, y: -1 },
+        { x: 1, y: 1 },
+        { x: 0, y: 1.8 },
+        { x: -1, y: 1 }
+      ];
+
+      // Matrices:
+      // M1: Scale (1.5, 0.8)
+      // M2: Rotate 45 deg
+      // M3: Shear (0.4)
+      function evalPipeline(pt, prog) {
+        let { x, y } = pt;
+        // Stage 1: 0..1 Scale
+        const t1 = Math.max(0, Math.min(1, prog));
+        x = lerp(x, x * 1.5, t1);
+        y = lerp(y, y * 0.8, t1);
+
+        // Stage 2: 1..2 Rotate 45
+        if (prog > 1) {
+          const t2 = Math.min(1, prog - 1);
+          const ang = 45 * Math.PI / 180 * t2;
+          const cos = Math.cos(ang), sin = Math.sin(ang);
+          const rx = cos * x - sin * y;
+          const ry = sin * x + cos * y;
+          x = rx; y = ry;
+        }
+
+        // Stage 3: 2..3 Shear 0.4
+        if (prog > 2) {
+          const t3 = Math.min(1, prog - 2);
+          const sh = 0.4 * t3;
+          x = x + sh * y;
+        }
+        return { x, y };
+      }
+
+      function draw() {
+        rsz();
+        const ctx = cv.getContext('2d');
+        drawGrid(ctx, W, H, ox, oy, cell);
+
+        const prog = parseFloat($i('pipe-progress').value);
+        $i('pipe-prog-val').textContent = prog.toFixed(2);
+
+        // Update active highlight on stages
+        const s1 = $i('stage-1'), s2 = $i('stage-2'), s3 = $i('stage-3');
+        [s1, s2, s3].forEach(el => el.classList.remove('active'));
+        if (prog < 1) s1.classList.add('active');
+        else if (prog < 2) s2.classList.add('active');
+        else s3.classList.add('active');
+
+        // Draw transformed polygon
+        ctx.save();
+        ctx.beginPath();
+        rawModel.forEach((pt, idx) => {
+          const tp = evalPipeline(pt, prog);
+          const px = ox + tp.x * cell, py = oy - tp.y * cell;
+          if (idx === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(124, 106, 247, 0.35)';
+        ctx.strokeStyle = '#7c6af7';
+        ctx.lineWidth = 3 * devicePixelRatio;
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+
+        // Draw transformed coordinate axes
+        const ax = evalPipeline({ x: 1, y: 0 }, prog);
+        const ay = evalPipeline({ x: 0, y: 1 }, prog);
+        arrow(ctx, ox, oy, ox + ax.x * cell, oy - ax.y * cell, '#ff6b6b', 3 * devicePixelRatio, 12 * devicePixelRatio);
+        arrow(ctx, ox, oy, ox + ay.x * cell, oy - ay.y * cell, '#4dabf7', 3 * devicePixelRatio, 12 * devicePixelRatio);
+      }
+
+      let pipeTimer = null;
+      $i('pipe-play').addEventListener('click', () => {
+        let p = 0;
+        $i('pipe-progress').value = p;
+        clearInterval(pipeTimer);
+        pipeTimer = setInterval(() => {
+          p += 0.025;
+          if (p > 3) { p = 3; clearInterval(pipeTimer); }
+          $i('pipe-progress').value = p;
+          draw();
+        }, 20);
+      });
+      $i('pipe-reset').addEventListener('click', () => {
+        clearInterval(pipeTimer);
+        $i('pipe-progress').value = 0;
+        draw();
+      });
+      $i('pipe-progress').addEventListener('input', draw);
+      window.s8Draw = draw;
+      window.addEventListener('resize', draw);
+      draw();
+    })();
+  </script>
+</body>
+
+</html>
