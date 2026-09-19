@@ -78,8 +78,8 @@ export default function QRExplorerInline() {
   const handleRandomMatrix = () => {
     const rX1 = Math.round((Math.random() * 6 - 3) * 10) / 10 || 2;
     const rY1 = Math.round((Math.random() * 6 - 3) * 10) / 10 || 1;
-    let rX2 = Math.round((Math.random() * 6 - 3) * 10) / 10 || 1;
-    let rY2 = Math.round((Math.random() * 6 - 3) * 10) / 10 || 3;
+    const rX2 = Math.round((Math.random() * 6 - 3) * 10) / 10 || 1;
+    const rY2 = Math.round((Math.random() * 6 - 3) * 10) / 10 || 3;
     setA1({ x: rX1, y: rY1 });
     setA2({ x: rX2, y: rY2 });
   };
