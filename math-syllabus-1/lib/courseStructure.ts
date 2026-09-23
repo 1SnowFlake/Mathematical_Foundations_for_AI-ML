@@ -26,7 +26,6 @@ export const SECTIONS: Section[] = [
     topics: [
       { slug: "vectors", title: "Vectors" },
       { slug: "linear-transformations", title: "Linear Transformations" },
-      { slug: "matrix-transformations", title: "Matrix Transformations" },
       { slug: "cramers-rule", title: "Cramer's Rule — Geometric Interpretation" },
       { slug: "cross-products", title: "Cross Products in the Light of Linear Transformations" },
       { slug: "eigenvalues", title: "Eigenvalues & Eigenvectors" },
